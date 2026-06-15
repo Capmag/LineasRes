@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Gochi+Hand&display=swap');
+
+/* ===========================
+   CONTENEDOR GENERAL
+=========================== */
+.moviles-container {
+    width: 85%;
+    max-width: 1100px;
+    margin: 40px auto;
+    text-align: center;
+    font-family: 'Gochi Hand', cursive;
+}
+
+/* ===========================
+   TÍTULO
+=========================== */
+.titulo-movil {
+    font-size: 34px;
+    margin-bottom: 25px;
+    font-weight: bold;
+}
+
+/* ===========================
+   TABLA CONTENEDORA
+=========================== */
+.tabla-movil {
+    width: 100%;
+    background-color: #f0f0f0;
+    border: 3px solid black;
+    border-radius: 5px;
+    box-shadow: 4px 5px 6px rgba(0,0,0,0.25);
+    padding: 5px 0;
+}
+
+/* ===========================
+   CADA ITEM
+=========================== */
+.movil-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 10px;
+    border-bottom: 2px solid #bfbfbf;
+}
+
+/* intercalado */
+.movil-item:nth-child(even) {
+    background-color: #ffffff;
+}
+
+.movil-item:nth-child(odd) {
+    background-color: #e6e6e6;
+}
+
+/* Último sin borde */
+.movil-item:last-child {
+    border-bottom: none;
+}
+
+/* ===========================
+   INFO DEL MOVIL (estilo tabla)
+=========================== */
+.movil-info {
+    width: 80%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px 15px;
+    text-align: left;
+    font-size: 15px;
+    line-height: 20px;
+}
+
+.movil-info strong {
+    font-weight: 700;
+}
+
+/* ===========================
+   ICONOS Y ACCIONES
+=========================== */
+.movil-acciones {
+    display: flex;
+    gap: 12px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.icono {
+    width: 42px;
+    transition: 0.2s;
+}
+
+.icono:hover {
+    transform: scale(1.1);
+}
+
+/* ===========================
+   BOTÓN AGREGAR NUEVO
+=========================== */
+.btn-agregar {
+    margin-top: 25px;
+    padding: 15px 60px;
+    background-color: #dcdcdc;
+    border: 3px solid black;
+    font-size: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 4px 6px 6px rgba(0,0,0,0.25);
+    font-family: 'Gochi Hand', cursive;
+    transition: 0.2s;
+}
+
+.btn-agregar:hover {
+    background-color: #c8c8c8;
+    transform: scale(1.03);
+}

@@ -1,0 +1,61 @@
+/* Fuente estilo cartoon utilizada en tu diseño */
+@import url('https://fonts.googleapis.com/css2?family=Gochi+Hand&display=swap');
+
+body {
+    font-family: 'Gochi Hand', cursive;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
+}
+
+/* Título */
+.subtitulo {
+    text-align: center;
+    font-size: 36px;
+    margin-top: 40px;
+}
+
+/* FORMULARIO CENTRADO */
+.formulario {
+    width: 40%;                    /* Más angosto */
+    margin: 50px auto 0 auto;      /* Centrado horizontal */
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    font-size: 22px;
+    align-items: center;           /* Centra inputs y etiquetas */
+}
+
+/* Inputs más centrados */
+.formulario label {
+    width: 100%;
+    text-align:center;
+}
+
+.formulario input {
+    width: 100%;
+    max-width: 350px;
+    padding: 6px 12px;
+    font-size: 20px;
+    border: 2px solid #888;
+    border-radius: 4px;
+}
+
+/* Botón azul estilo cartoon */
+.btn-crear {
+    margin-top: 20px;
+    width: 220px;
+    background-color: #4aa8df;
+    border: 3px solid #2c91c6;
+    color: #000;
+    padding: 12px 40px;
+    font-size: 28px;
+    font-family: 'Gochi Hand', cursive;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+.btn-crear:hover {
+    background-color: #3a9ad1;
+}

@@ -1,0 +1,70 @@
+/* ----- Contenedor general ----- */
+@import url('https://fonts.googleapis.com/css2?family=Gochi+Hand&display=swap');
+
+body {
+    font-family: 'Gochi Hand', cursive;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+}
+
+
+.form-container {
+    width: 80%;
+    max-width: 900px;
+    margin: 40px auto;
+    text-align: center;
+}
+
+/* ----- Título ----- */
+.title {
+    font-size: 36px;
+    margin-bottom: 40px;
+    font-weight: bold;
+}
+
+/* ----- Formulario ----- */
+.area-form {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    width: 80%;
+    margin: 0 auto;
+}
+
+/* ----- Etiquetas ----- */
+.area-form label {
+    text-align: left;
+    font-size: 18px;
+    margin-bottom: -10px;
+}
+
+/* ----- Inputs ----- */
+.area-form input {
+    height: 30px;
+    border: 2px solid #c6c6c6;
+    border-radius: 4px;
+    padding-left: 8px;
+    font-size: 16px;
+}
+
+/* ----- Botón Crear ----- */
+.btn-crear {
+    margin-top: 25px;
+    background-color: #34a4dd;
+    color: white;
+    border: none;
+    padding: 12px 0;
+    font-size: 22px;
+    width: 230px;
+    align-self: center;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 3px 3px 3px #999;
+    transition: 0.2s ease-in-out;
+    font-family: 'Gochi Hand', cursive;
+}
+
+.btn-crear:hover {
+    background-color: #2492c8;
+}

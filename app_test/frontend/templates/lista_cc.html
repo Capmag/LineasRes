@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Centros de Costo{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h1 class="mb-0">Centros de Costo</h1>
+            <p class="text-muted small mt-1 mb-0">Estructura organizacional y directores responsables</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success" onclick="abrirModalCrear()">
+                + Nuevo Centro
+            </button>
+        </div>
+    </div>
+
+    {% if centros_costos %}
+    <div class="data-card">
+        <div class="table-toolbar">
+            <div class="toolbar-search">
+                <input type="text" id="searchCC" placeholder="Buscar centro de costo o director...">
+            </div>
+            <span class="toolbar-info">{{ centros_costos|length }} registros</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="ccTable">
+                <thead>
+                    <tr>
+                        <th data-sort="text" width="20%">ID</th>
+                        <th data-sort="text" width="35%">Nombre</th>
+                        <th data-sort="text" width="30%">Director</th>
+                        <th width="15%">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cc in centros_costos %}
+                    <tr data-id="{{ cc.id }}">
+                        <td><span class="badge bg-secondary">{{ cc.id }}</span></td>
+                        <td><strong>{{ cc.nombre }}</strong></td>
+                        <td>
+                            {% if cc.director_id %}
+                                <strong>{{ cc.director_nombre }}</strong>
+                                <br><small class="text-muted">ID: {{ cc.director_id }}</small>
+                            {% else %}
+                                <span class="text-muted">— Sin director —</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary"
+                                data-id="{{ cc.id }}"
+                                data-nombre="{{ cc.nombre }}"
+                                data-director-id="{{ cc.director_id or '' }}"
+                                data-director-nombre="{{ cc.director_nombre or '' }}"
+                                onclick="abrirModalEditar(this.dataset.id, this.dataset.nombre, this.dataset.directorId, this.dataset.directorNombre)">
+                                Editar
+                            </button>
+                            <button class="btn btn-sm btn-danger"
+                                data-id="{{ cc.id }}"
+                                data-nombre="{{ cc.nombre }}"
+                                onclick="confirmarEliminacion(this.dataset.id, this.dataset.nombre)">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-wrapper" id="ccPagination"></div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <h5>No hay centros de costo registrados</h5>
+        <p class="mb-3">Comienza agregando tu primer centro</p>
+        <button class="btn btn-success" onclick="abrirModalCrear()">+ Crear Centro</button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Crear -->
+<div class="modal fade" id="createCCModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Centro de Costo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createCCForm">
+                    <div class="mb-3">
+                        <label class="form-label">ID del Centro de Costo <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="id_create" required placeholder="Ej: CC001">
+                        <small class="form-text">Identificador único del centro de costo</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nombre_create" required placeholder="Ej: Oficina Principal">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Director</label>
+                        <input type="text" class="form-control" id="director_search_create" placeholder="Escribe el nombre o ID del director...">
+                        <input type="hidden" id="director_id_create">
+                        <small class="form-text">Selecciona un director de la lista. Déjalo en blanco si no hay director asignado.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="crearCC()">Crear</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="updateCCModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Centro de Costo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateCCForm">
+                    <input type="hidden" id="cc_id_edit">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nombre_edit" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Director</label>
+                        <input type="text" class="form-control" id="director_search_edit" placeholder="Escribe el nombre o ID del director...">
+                        <input type="hidden" id="director_id_edit">
+                        <small class="form-text">Selecciona un director de la lista o déjalo en blanco para quitar la asignación.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="actualizarCC()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmación -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage" class="mb-0"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarEliminacionAccion()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    let ccIdActual = null;
+    let directorAutocompleteCreate = null;
+    let directorAutocompleteEdit = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (document.getElementById('ccTable')) {
+            new App.DataTable({
+                tableId: 'ccTable',
+                searchInputId: 'searchCC',
+                pageSize: 15,
+                paginationId: 'ccPagination',
+            });
+        }
+
+        // Autocomplete para director (modal crear)
+        directorAutocompleteCreate = new App.Autocomplete({
+            input: document.getElementById('director_search_create'),
+            hidden: document.getElementById('director_id_create'),
+            endpoint: '/api/directores',
+        });
+
+        // Autocomplete para director (modal editar)
+        directorAutocompleteEdit = new App.Autocomplete({
+            input: document.getElementById('director_search_edit'),
+            hidden: document.getElementById('director_id_edit'),
+            endpoint: '/api/directores',
+        });
+    });
+
+    window.abrirModalCrear = function () {
+        document.getElementById('createCCForm').reset();
+        if (directorAutocompleteCreate) directorAutocompleteCreate.clear();
+        new bootstrap.Modal(document.getElementById('createCCModal')).show();
+    };
+
+    window.crearCC = async function () {
+        const id = document.getElementById('id_create').value.trim();
+        const nombre = document.getElementById('nombre_create').value.trim();
+        const director_id = document.getElementById('director_id_create').value.trim() || null;
+        const director_text = document.getElementById('director_search_create').value.trim();
+
+        if (!id || !nombre) {
+            Toast.error('ID y nombre son obligatorios');
+            return;
+        }
+
+        // Si el usuario escribió algo pero no seleccionó nadie válido, avisar
+        if (director_text && !director_id) {
+            Toast.error('Selecciona un director de la lista de sugerencias');
+            return;
+        }
+
+        try {
+            await App.apiCall('/cc/crear', {
+                method: 'POST',
+                body: JSON.stringify({ id, nombre, director_id })
+            });
+            Toast.success('Centro de costo creado');
+            bootstrap.Modal.getInstance(document.getElementById('createCCModal')).hide();
+            setTimeout(() => location.reload(), 600);
+        } catch (e) {
+            Toast.error(e.message);
+        }
+    };
+
+    window.abrirModalEditar = function (id, nombre, director_id, director_nombre) {
+        document.getElementById('cc_id_edit').value = id;
+        document.getElementById('nombre_edit').value = nombre;
+        if (directorAutocompleteEdit) {
+            directorAutocompleteEdit.setValue(director_id || '', director_nombre || '');
+        }
+        new bootstrap.Modal(document.getElementById('updateCCModal')).show();
+    };
+
+    window.actualizarCC = async function () {
+        const cc_id = document.getElementById('cc_id_edit').value;
+        const nombre = document.getElementById('nombre_edit').value.trim();
+        const director_id = document.getElementById('director_id_edit').value.trim() || null;
+        const director_text = document.getElementById('director_search_edit').value.trim();
+
+        if (!nombre) {
+            Toast.error('El nombre es obligatorio');
+            return;
+        }
+
+        if (director_text && !director_id) {
+            Toast.error('Selecciona un director de la lista o borra el campo');
+            return;
+        }
+
+        try {
+            await App.apiCall(`/cc/editar/${cc_id}`, {
+                method: 'POST',
+                body: JSON.stringify({ nombre, director_id })
+            });
+            Toast.success('Centro de costo actualizado');
+            bootstrap.Modal.getInstance(document.getElementById('updateCCModal')).hide();
+            setTimeout(() => location.reload(), 600);
+        } catch (e) {
+            Toast.error(e.message);
+        }
+    };
+
+    window.confirmarEliminacion = function (id, nombre) {
+        ccIdActual = id;
+        document.getElementById('confirmMessage').textContent =
+            `¿Estás seguro de eliminar el centro de costo "${nombre}"?`;
+        new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    };
+
+    window.confirmarEliminacionAccion = async function () {
+        try {
+            await App.apiCall('/centroscostos', {
+                method: 'POST',
+                body: JSON.stringify({ id: ccIdActual })
+            });
+            Toast.success('Centro de costo eliminado');
+            bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+            const row = document.querySelector(`tr[data-id="${ccIdActual}"]`);
+            if (row) row.remove();
+        } catch (e) {
+            Toast.error(e.message);
+        }
+    };
+})();
+</script>
+{% endblock %}

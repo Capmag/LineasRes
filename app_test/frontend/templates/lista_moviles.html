@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Equipos{% endblock %}
+
+{% block styles %}
+<style>
+    .moviles-table-wrapper {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .estatus-badge-custom {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.85em;
+        font-weight: 600;
+    }
+
+    .estatus-disponible {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .estatus-asignado {
+        background-color: #cfe2ff;
+        color: #084298;
+    }
+
+    .estatus-en-taller {
+        background-color: #fff3cd;
+        color: #664d03;
+    }
+
+    .estatus-robado {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .estatus-baja {
+        background-color: #e2e3e5;
+        color: #383d41;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Equipos</h1>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success btn-lg" onclick="abrirModalCrear()">
+                + Nuevo Equipo
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla de Equipos -->
+    {% if moviles %}
+    <div class="data-card">
+        <div class="table-toolbar">
+            <div class="toolbar-search">
+                <input type="text" id="searchMoviles" placeholder="Buscar por IMEI, marca, modelo...">
+            </div>
+            <span class="toolbar-info">{{ moviles|length }} registros</span>
+        </div>
+        <div class="table-responsive">
+        <table class="table table-hover mb-0" id="movilesTable">
+            <thead>
+                <tr>
+                    <th data-sort="text" width="14%">IMEI</th>
+                    <th data-sort="text" width="12%">Marca</th>
+                    <th data-sort="text" width="12%">Modelo</th>
+                    <th data-sort="text" width="12%">Serial</th>
+                    <th data-sort="text" width="12%">Estado</th>
+                    <th data-sort="text" width="18%">Asignado a</th>
+                    <th width="20%">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for movil in moviles %}
+                <tr data-id="{{ movil.imei }}">
+                    <td><strong>{{ movil.imei }}</strong></td>
+                    <td>{{ movil.marca or '—' }}</td>
+                    <td>{{ movil.modelo or '—' }}</td>
+                    <td>{{ movil.serial or '—' }}</td>
+                    <td>
+                        <span class="estatus-badge-custom estatus-{{ movil.estatus|lower|replace(' ', '-') }}">
+                            {{ movil.estatus }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if movil.empleado %}
+                            <small>{{ movil.empleado }}<br>
+                            {% if movil.linea %}Línea: {{ movil.linea }}{% endif %}</small>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary"
+                            data-imei="{{ movil.imei }}"
+                            data-marca="{{ movil.marca or '' }}"
+                            data-modelo="{{ movil.modelo or '' }}"
+                            data-serial="{{ movil.serial or '' }}"
+                            onclick="abrirModalEditar(this.dataset.imei, this.dataset.marca, this.dataset.modelo, this.dataset.serial)">
+                            Editar
+                        </button>
+                        <a href="/equipo/{{ movil.imei }}/historial" class="btn btn-sm btn-info">
+                            Historial
+                        </a>
+                        {% if movil.estatus != 'Baja' %}
+                        <button class="btn btn-sm btn-warning" onclick="confirmarBaja('{{ movil.imei }}')">
+                            Baja
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        <div class="pagination-wrapper" id="movilesPagination"></div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <h5>No hay equipos registrados</h5>
+        <p class="mb-3">Comienza agregando tu primer equipo</p>
+        <button class="btn btn-success btn-lg" onclick="abrirModalCrear()">+ Crear Equipo</button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de Crear -->
+<div class="modal fade" id="createMovilModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">➕ Nuevo Equipo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createMovilForm">
+                    <div class="mb-3">
+                        <label for="imei_create" class="form-label">IMEI <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="imei_create" required maxlength="15" pattern="\d{15}" inputmode="numeric" placeholder="15 dígitos">
+                        <small class="form-text text-muted">Debe tener exactamente 15 dígitos numéricos</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="marca_create" class="form-label">Marca</label>
+                        <input type="text" class="form-control" id="marca_create">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modelo_create" class="form-label">Modelo</label>
+                        <input type="text" class="form-control" id="modelo_create">
+                    </div>
+                    <div class="mb-3">
+                        <label for="serial_create" class="form-label">Serial</label>
+                        <input type="text" class="form-control" id="serial_create">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="crearMovil()">Crear</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Editar -->
+<div class="modal fade" id="updateMovilModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Equipo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateMovilForm">
+                    <input type="hidden" id="imei_edit">
+                    <div class="mb-3">
+                        <label for="imei_display" class="form-label">IMEI</label>
+                        <input type="text" class="form-control" id="imei_display" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="marca_edit" class="form-label">Marca</label>
+                        <input type="text" class="form-control" id="marca_edit">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modelo_edit" class="form-label">Modelo</label>
+                        <input type="text" class="form-control" id="modelo_edit">
+                    </div>
+                    <div class="mb-3">
+                        <label for="serial_edit" class="form-label">Serial</label>
+                        <input type="text" class="form-control" id="serial_edit">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="actualizarMovil()">Actualizar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación (Baja) -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Marcar como Baja</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="confirmBtn" onclick="confirmarBajaAccion()">Marcar como Baja</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let movilImeiActual = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (document.getElementById('movilesTable')) {
+            new App.DataTable({
+                tableId: 'movilesTable',
+                searchInputId: 'searchMoviles',
+                pageSize: 15,
+                paginationId: 'movilesPagination',
+            });
+        }
+        // Si vienen con ?nuevo=1 desde el dashboard, abrir modal automáticamente
+        if (new URLSearchParams(window.location.search).get('nuevo') === '1') {
+            setTimeout(abrirModalCrear, 200);
+        }
+    });
+
+    // Abrir modal de crear
+    function abrirModalCrear() {
+        document.getElementById('createMovilForm').reset();
+        const modal = new bootstrap.Modal(document.getElementById('createMovilModal'));
+        modal.show();
+    }
+
+    // Crear equipo
+    async function crearMovil() {
+        const imei = document.getElementById('imei_create').value.trim();
+        const marca = document.getElementById('marca_create').value.trim() || null;
+        const modelo = document.getElementById('modelo_create').value.trim() || null;
+        const serial = document.getElementById('serial_create').value.trim() || null;
+
+        if (!imei) {
+            Toast.error('Por favor completa todos los campos requeridos');
+            return;
+        }
+
+        try {
+            const resp = await fetch('/movil/crear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imei, marca, modelo, serial })
+            });
+            const data = await resp.json();
+
+            if (data.ok) {
+                Toast.success(data.msg);
+                bootstrap.Modal.getInstance(document.getElementById('createMovilModal')).hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                Toast.error(data.msg || 'Error al crear equipo');
+            }
+        } catch (e) {
+            Toast.error('Error de conexión: ' + e.message);
+        }
+    }
+
+    // Abrir modal de editar
+    function abrirModalEditar(imei, marca, modelo, serial) {
+        document.getElementById('imei_edit').value = imei;
+        document.getElementById('imei_display').value = imei;
+        document.getElementById('marca_edit').value = marca;
+        document.getElementById('modelo_edit').value = modelo;
+        document.getElementById('serial_edit').value = serial;
+
+        const modal = new bootstrap.Modal(document.getElementById('updateMovilModal'));
+        modal.show();
+    }
+
+    // Actualizar equipo
+    async function actualizarMovil() {
+        const imei = document.getElementById('imei_edit').value;
+        const marca = document.getElementById('marca_edit').value.trim() || null;
+        const modelo = document.getElementById('modelo_edit').value.trim() || null;
+        const serial = document.getElementById('serial_edit').value.trim() || null;
+
+        try {
+            const resp = await fetch(`/movil/editar/${imei}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ marca, modelo, serial })
+            });
+            const data = await resp.json();
+
+            if (data.ok) {
+                Toast.success(data.msg);
+                bootstrap.Modal.getInstance(document.getElementById('updateMovilModal')).hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                Toast.error(data.msg || 'Error al actualizar equipo');
+            }
+        } catch (e) {
+            Toast.error('Error de conexión: ' + e.message);
+        }
+    }
+
+    // Confirmar baja
+    function confirmarBaja(imei) {
+        movilImeiActual = imei;
+        document.getElementById('confirmMessage').textContent = `¿Estás seguro de que deseas marcar como baja el equipo ${imei}?`;
+
+        const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        modal.show();
+    }
+
+    // Confirmar acción de baja
+    async function confirmarBajaAccion() {
+        try {
+            const resp = await fetch('/moviles', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imei: movilImeiActual })
+            });
+            const data = await resp.json();
+
+            if (data.ok) {
+                Toast.success(data.msg);
+                bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                Toast.error(data.msg || 'Error en la operación');
+            }
+        } catch (e) {
+            Toast.error('Error de conexión: ' + e.message);
+        }
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Gochi+Hand&display=swap');
+
+body {
+    font-family: 'Gochi Hand', cursive;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+}
+
+
+.upd-container {
+    text-align: center;
+    padding: 20px;
+}
+
+.titulo-upd {
+    font-size: 34px;
+    margin-bottom: 40px;
+    font-weight: bold;
+}
+
+/* GRID GENERAL */
+.upd-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+}
+
+/* COLUMNA IZQUIERDA */
+.col-left, .col-right {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    width: 320px;
+}
+
+.col-left label,
+.col-right label {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.col-left input,
+.col-right input {
+    width: 100%;
+    padding: 7px;
+    border: 2px solid #555;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+/* LÍNEA DIVISORIA VERTICAL */
+.divider {
+    width: 3px;
+    background-color: #333;
+}
+
+/* DIRECTOR BOX */
+.director-box {
+    display: flex;
+    border: 3px solid #444;
+    margin-top: 10px;
+}
+
+.director-left, .director-right {
+    flex: 1;
+    padding: 20px;
+    cursor: pointer;
+    border-right: 3px solid #444;
+    background-color: #d9ff96;  /* verde claro */
+}
+
+.director-right {
+    border-right: none;
+    background-color: #e7ffc8; /* verde más pálido */
+}
+
+.director-left p, .director-right p {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.director-left input, .director-right input {
+    width: 85%;
+}
+
+/* Caja activa */
+.activo {
+    background-color: #c5ff4d !important;
+}
+
+/* BOTÓN ACTUALIZAR */
+.btn-actualizar {
+    margin-top: 35px;
+    padding: 15px 40px;
+    background-color: #7aff52;
+    border: 3px solid #333;
+    font-size: 22px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.btn-actualizar:hover {
+    transform: scale(1.05);
+    background-color: #64e640;
+}

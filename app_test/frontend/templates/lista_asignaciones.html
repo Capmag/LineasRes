@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Asignaciones{% endblock %}
+
+{% block styles %}
+<style>
+    .asignaciones-table-wrapper {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .estatus-vigente {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .estatus-cerrada {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .nav-tabs .nav-link {
+        color: #666;
+        border: none;
+        border-bottom: 3px solid transparent;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: #0066cc;
+        border-bottom-color: #0066cc;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #0066cc;
+        background-color: transparent;
+        border-bottom-color: #0066cc;
+    }
+
+    .sin-registros {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+        font-size: 1.1em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Asignaciones de Recursos</h1>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success btn-lg" onclick="abrirModalCrear()">
+                + Nueva Asignación
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if estatus == 'Vigente' %}active{% endif %}" onclick="filtrarPor('Vigente')" type="button">
+                Vigentes
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if estatus == 'Cerrada' %}active{% endif %}" onclick="filtrarPor('Cerrada')" type="button">
+                Cerradas
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tabla de Asignaciones -->
+    {% if asignaciones %}
+    <div class="data-card">
+        <div class="table-toolbar">
+            <div class="toolbar-search">
+                <input type="text" id="searchAsignaciones" placeholder="Buscar empleado, área, línea, IMEI...">
+            </div>
+            <span class="toolbar-info">{{ asignaciones|length }} registros</span>
+        </div>
+        <div class="table-responsive">
+        <table class="table table-hover mb-0" id="asignacionesTable">
+            <thead>
+                <tr>
+                    <th data-sort="text" width="15%">Empleado</th>
+                    <th data-sort="text" width="12%">Área</th>
+                    <th data-sort="text" width="12%">Línea</th>
+                    <th data-sort="text" width="15%">Equipo (IMEI)</th>
+                    <th data-sort="date" width="13%">Fecha Inicio</th>
+                    <th data-sort="text" width="10%">Estado</th>
+                    <th width="23%">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for asignacion in asignaciones %}
+                <tr data-id="{{ asignacion.id }}">
+                    <td><strong>{{ asignacion.empleado }}</strong></td>
+                    <td>{{ asignacion.area }}</td>
+                    <td>{{ asignacion.linea }}</td>
+                    <td>
+                        <small>{{ asignacion.imei }}<br>
+                        <span class="text-muted">{{ asignacion.modelo }}</span></small>
+                    </td>
+                    <td>{{ asignacion.fecha_inicio.strftime('%d/%m/%Y %H:%M') if asignacion.fecha_inicio else '-' }}</td>
+                    <td>
+                        <span class="badge estatus-{{ asignacion.estatus|lower }}">
+                            {{ asignacion.estatus }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/asignacion/{{ asignacion.id }}/historial" class="btn btn-sm btn-secondary">
+                            Historial
+                        </a>
+                        {% if asignacion.estatus == 'Vigente' %}
+                            <button class="btn btn-sm btn-info" onclick="reasignarAsignacion('{{ asignacion.id }}')">
+                                Reasignar
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="confirmarCierre('{{ asignacion.id }}', '{{ asignacion.empleado }}')">
+                                Cerrar
+                            </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        <div class="pagination-wrapper" id="asignacionesPagination"></div>
+    </div>
+    {% else %}
+    <div class="sin-registros">
+        <p>No hay asignaciones {% if estatus == 'Vigente' %}vigentes{% else %}cerradas{% endif %}</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de Confirmación (Cierre de Asignación) -->
+<div class="modal fade" id="closeAssignmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cerrar Asignación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="closeMessage" class="mb-3"></p>
+                <form id="closeAssignmentForm">
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo de Cierre <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="motivo" rows="4" required></textarea>
+                        <small class="text-muted">Describe brevemente el motivo del cierre</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarCierreAccion()">Cerrar Asignación</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let asignacionIdActual = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (document.getElementById('asignacionesTable')) {
+            new App.DataTable({
+                tableId: 'asignacionesTable',
+                searchInputId: 'searchAsignaciones',
+                pageSize: 15,
+                paginationId: 'asignacionesPagination',
+            });
+        }
+    });
+
+    // Filtrar por estatus
+    function filtrarPor(estatus) {
+        window.location.href = `/asignaciones?estatus=${estatus}`;
+    }
+
+    // Abrir modal para nueva asignación
+    function abrirModalCrear() {
+        window.location.href = '/asignar';
+    }
+
+    // Reasignar (redirect to reasign page)
+    function reasignarAsignacion(asignacionId) {
+        window.location.href = `/asignacion/${asignacionId}/reasignar`;
+    }
+
+    // Confirmar cierre
+    function confirmarCierre(asignacionId, empleado) {
+        asignacionIdActual = asignacionId;
+        document.getElementById('closeMessage').textContent = `¿Estás seguro de que deseas cerrar la asignación de ${empleado}?`;
+
+        const modal = new bootstrap.Modal(document.getElementById('closeAssignmentModal'));
+        modal.show();
+    }
+
+    // Confirmar acción de cierre
+    async function confirmarCierreAccion() {
+        const motivo = document.getElementById('motivo').value.trim();
+
+        if (!motivo) {
+            Toast.error('Por favor especifica un motivo');
+            return;
+        }
+
+        try {
+            const resp = await fetch(`/asignacion/${asignacionIdActual}/baja`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ motivo })
+            });
+            const data = await resp.json();
+
+            if (data.ok) {
+                Toast.success(data.msg);
+                bootstrap.Modal.getInstance(document.getElementById('closeAssignmentModal')).hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                Toast.error(data.msg || 'Error al cerrar asignación');
+            }
+        } catch (e) {
+            Toast.error('Error de conexión: ' + e.message);
+        }
+    }
+</script>
+
+{% endblock %}

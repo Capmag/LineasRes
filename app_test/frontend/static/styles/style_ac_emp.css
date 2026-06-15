@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Gochi+Hand&display=swap');
+
+body {
+    font-family: 'Gochi Hand', cursive;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+}
+
+/* Contenedor general */
+.container-update {
+    width: 85%;
+    max-width: 1100px;
+    margin: 40px auto;
+    text-align: center;
+}
+
+/* Título principal */
+.container-update h1 {
+    font-size: 35px;
+    margin-bottom: 25px;
+    font-weight: bold;
+}
+
+/* Contenedor del formulario */
+.update-form {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 15px;
+    padding-bottom: 20px;
+}
+
+/* Secciones izquierda y derecha */
+.left-section,
+.right-section {
+    width: 45%;
+    text-align: left;
+}
+
+/* Etiquetas */
+label {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+/* Inputs */
+input[type="text"] {
+    width: 95%;
+    padding: 6px;
+    margin-bottom: 18px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+    font-size: 14px;
+    background-color: #f8f8f8;
+}
+
+/* Línea divisoria vertical */
+.divider {
+    width: 2px;
+    background-color: #3cb043; /* verde de la imagen */
+    margin: 0 15px;
+}
+
+/* Botón Actualizar */
+.btn-actualizar {
+    background-color: #7ee35e;
+    color: black;
+    border: none;
+    padding: 12px 0;
+    font-size: 22px;
+    width: 250px;
+    margin: 0 auto;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 3px 3px 3px #999;
+    transition: 0.2s ease-in-out;
+    font-family: 'Gochi Hand', cursive;
+}
+
+.btn-actualizar:hover {
+    background-color: #68d249;
+}

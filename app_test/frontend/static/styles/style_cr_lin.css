@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Gochi+Hand&display=swap');
+
+/* ================================
+   CONFIG GLOBAL
+================================ */
+body {
+    font-family: 'Gochi Hand', cursive;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
+}
+
+.form-container {
+    width: 85%;
+    max-width: 1100px;
+    margin: 40px auto;
+    text-align: center;
+}
+
+/* ================================
+   TÍTULO
+================================ */
+.title {
+    font-size: 38px;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+/* ================================
+   FORMULARIO PRINCIPAL
+================================ */
+.linea-form {
+    width: 100%;
+    max-width: 850px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 40px;
+    text-align: left;
+}
+
+.linea-form label {
+    font-size: 18px;
+}
+
+.linea-form input {
+    width: 100%;
+    padding: 6px;
+    border: 2px solid black;
+    border-radius: 4px;
+    background-color: #ffffff;
+    font-size: 16px;
+    outline: none;
+}
+
+/* Forzar que los labels ocupen su propio espacio */
+.linea-form label {
+    margin-top: 10px;
+    display: block;
+}
+
+/* ================================
+   SECCIÓN AZUL (empleado / área)
+================================ */
+.linea-box {
+    grid-column: span 2;
+    display: flex;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.seleccionable {
+    width: 45%;
+    border: 2px solid black;
+    padding: 15px;
+    border-radius: 6px;
+    margin: 0 10px;
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.25);
+}
+
+.linea-left {
+    background-color: #8ac6ea;
+}
+
+.linea-right {
+    background-color: #a8dbf5; 
+}
+
+.seleccionable p {
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.seleccionable label {
+    font-size: 16px;
+}
+
+.seleccionable input {
+    width: 100%;
+    padding: 6px;
+    border: 2px solid black;
+    border-radius: 4px;
+    background-color: #ffffff;
+    outline: none;
+}
+
+/* ================================
+   BOTÓN CREAR
+================================ */
+.btn-crear {
+    grid-column: span 2;
+    margin: 35px auto 0;
+    padding: 15px 60px;
+    background-color: #56a9e6; 
+    border: 3px solid black;
+    font-size: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 4px 6px 6px rgba(0,0,0,0.25);
+    transition: 0.2s;
+    font-family: 'Gochi Hand', cursive;
+    color: black;
+}
+
+.btn-crear:hover {
+    background-color: #3d94d1;
+    transform: scale(1.03);
+}

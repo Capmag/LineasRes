@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Reasignar Asignación{% endblock %}
+
+{% block styles %}
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 30px;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .form-container h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 1.8rem;
+        color: #1a1a1a;
+    }
+
+    .section-title {
+        font-size: 1.1em;
+        font-weight: 700;
+        color: #333;
+        margin-top: 25px;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-group select,
+    .form-group textarea,
+    .readonly-field {
+        width: 100%;
+    }
+
+    .readonly-field {
+        background-color: #f8f9fa;
+        padding: 10px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        color: #666;
+    }
+
+    .form-group .info-text {
+        font-size: 0.85em;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .current-assignment {
+        background-color: #cfe2ff;
+        border-left: 4px solid #0066cc;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+
+    .current-assignment p {
+        margin: 5px 0;
+        font-size: 0.95em;
+    }
+
+    .current-assignment strong {
+        color: #084298;
+    }
+
+    .btn-reasignar {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #17a2b8 0%, #0c5460 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.05em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .btn-reasignar:hover {
+        background: linear-gradient(135deg, #0c5460 0%, #063541 100%);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-1px);
+    }
+
+    .btn-reasignar:active {
+        transform: translateY(0);
+    }
+
+    .required {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="form-container">
+    <h1>Reasignar Asignación</h1>
+
+    <!-- Información Actual -->
+    <div class="current-assignment">
+        <strong>Asignación Actual:</strong>
+        <p><strong>Empleado:</strong> {{ asignacion.empleado }}</p>
+        <p><strong>Línea:</strong> {{ asignacion.linea }}</p>
+        <p><strong>Equipo:</strong> {{ asignacion.imei }} ({{ asignacion.modelo }})</p>
+    </div>
+
+    <form id="reasignacionForm">
+        <div class="section-title">Nuevos Valores</div>
+
+        <div class="form-group">
+            <label for="nuevo_empleado_search">Nuevo Empleado (opcional)</label>
+            <input type="text" id="nuevo_empleado_search" class="form-control" placeholder="Escribe nombre o ID del nuevo empleado...">
+            <input type="hidden" id="nuevo_empleado_id">
+            <div class="info-text">Deja en blanco para mantener el empleado actual</div>
+        </div>
+
+        <div class="form-group">
+            <label for="nuevo_imei_search">Nuevo Equipo (opcional)</label>
+            <input type="text" id="nuevo_imei_search" class="form-control" placeholder="Escribe modelo o IMEI del nuevo equipo...">
+            <input type="hidden" id="nuevo_imei">
+            <div class="info-text">Deja en blanco para mantener el equipo actual</div>
+        </div>
+
+        <div class="form-group">
+            <label for="motivo">Motivo de la Reasignación <span class="required">*</span></label>
+            <textarea id="motivo" name="motivo" class="form-control" rows="3" placeholder="Explica el motivo de la reasignación" required></textarea>
+        </div>
+
+        <button type="button" class="btn-reasignar" onclick="procesarReasignacion()">Reasignar</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        new App.Autocomplete({
+            input: document.getElementById('nuevo_empleado_search'),
+            hidden: document.getElementById('nuevo_empleado_id'),
+            endpoint: '/api/empleados',
+        });
+        new App.Autocomplete({
+            input: document.getElementById('nuevo_imei_search'),
+            hidden: document.getElementById('nuevo_imei'),
+            endpoint: '/api/equipos_disponibles',
+        });
+    });
+
+    async function procesarReasignacion() {
+        const nuevo_empleado_id = document.getElementById('nuevo_empleado_id').value.trim() || null;
+        const nuevo_imei = document.getElementById('nuevo_imei').value.trim() || null;
+        const motivo = document.getElementById('motivo').value.trim();
+        const emp_text = document.getElementById('nuevo_empleado_search').value.trim();
+        const imei_text = document.getElementById('nuevo_imei_search').value.trim();
+
+        if (!motivo) {
+            Toast.error('El motivo de la reasignación es obligatorio');
+            return;
+        }
+
+        if (!nuevo_empleado_id && !nuevo_imei) {
+            Toast.error('Debes cambiar al menos el empleado o el equipo');
+            return;
+        }
+
+        // Si escribieron algo pero no seleccionaron de la lista
+        if ((emp_text && !nuevo_empleado_id) || (imei_text && !nuevo_imei)) {
+            Toast.error('Selecciona el empleado o equipo de la lista de sugerencias');
+            return;
+        }
+
+        try {
+            const asignacion_id = '{{ asignacion.id }}';
+            await App.apiCall(`/asignacion/${asignacion_id}/reasignar`, {
+                method: 'POST',
+                body: JSON.stringify({ nuevo_empleado_id, nuevo_imei, motivo })
+            });
+            Toast.success('Asignación reasignada correctamente');
+            window.location.href = '/asignaciones';
+        } catch (err) {
+            Toast.error(err.message);
+        }
+    }
+</script>
+
+{% endblock %}

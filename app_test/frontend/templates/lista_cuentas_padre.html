@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<style>
+    .cuentas-table-wrapper {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block title %}Cuentas Padre{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Cuentas Padre (Operadores)</h1>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success btn-lg" onclick="abrirModalCrear()">
+                + Nueva Cuenta
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla de Cuentas -->
+    {% if cuentas %}
+    <div class="data-card">
+        <div class="table-toolbar">
+            <div class="toolbar-search">
+                <input type="text" id="searchCuentas" placeholder="Buscar código u operador...">
+            </div>
+            <span class="toolbar-info">{{ cuentas|length }} registros</span>
+        </div>
+        <div class="table-responsive">
+        <table class="table table-hover mb-0" id="cuentasTable">
+            <thead>
+                <tr>
+                    <th data-sort="text" width="15%">Código</th>
+                    <th data-sort="text" width="20%">Operador</th>
+                    <th data-sort="text" width="30%">Descripción</th>
+                    <th data-sort="text" width="15%">Estado</th>
+                    <th width="20%">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cuenta in cuentas %}
+                <tr data-id="{{ cuenta.id }}">
+                    <td><strong>{{ cuenta.codigo }}</strong></td>
+                    <td>{{ cuenta.operador }}</td>
+                    <td>{{ cuenta.descripcion or '—' }}</td>
+                    <td>
+                        {% if cuenta.estatus == 'Activo' %}
+                            <span class="badge bg-success">{{ cuenta.estatus }}</span>
+                        {% else %}
+                            <span class="badge bg-danger">{{ cuenta.estatus }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary"
+                            data-id="{{ cuenta.id }}"
+                            data-codigo="{{ cuenta.codigo }}"
+                            data-operador="{{ cuenta.operador }}"
+                            data-descripcion="{{ cuenta.descripcion or '' }}"
+                            onclick="abrirModalEditar(this.dataset.id, this.dataset.codigo, this.dataset.operador, this.dataset.descripcion)">
+                            Editar
+                        </button>
+                        <button class="btn btn-sm btn-danger"
+                            data-id="{{ cuenta.id }}"
+                            data-codigo="{{ cuenta.codigo }}"
+                            onclick="confirmarEliminacion(this.dataset.id, this.dataset.codigo)">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        <div class="pagination-wrapper" id="cuentasPagination"></div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <h5>No hay cuentas padre registradas</h5>
+        <p class="mb-3">Comienza agregando tu primera cuenta</p>
+        <button class="btn btn-success btn-lg" onclick="abrirModalCrear()">+ Crear Cuenta</button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de Crear -->
+<div class="modal fade" id="createCuentaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Cuenta Padre</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createCuentaForm">
+                    <div class="mb-3">
+                        <label for="codigo_create" class="form-label">Código <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="codigo_create" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="operador_create" class="form-label">Operador <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="operador_create" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcion_create" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcion_create" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="crearCuenta()">Crear</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Editar -->
+<div class="modal fade" id="updateCuentaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Cuenta Padre</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateCuentaForm">
+                    <input type="hidden" id="cuenta_id_edit">
+                    <div class="mb-3">
+                        <label for="codigo_edit" class="form-label">Código <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="codigo_edit" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="operador_edit" class="form-label">Operador <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="operador_edit" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcion_edit" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcion_edit" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="actualizarCuenta()">Actualizar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmBtn" onclick="confirmarEliminacionAccion()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let cuentaIdActual = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (document.getElementById('cuentasTable')) {
+            new App.DataTable({
+                tableId: 'cuentasTable',
+                searchInputId: 'searchCuentas',
+                pageSize: 15,
+                paginationId: 'cuentasPagination',
+            });
+        }
+    });
+
+    // Abrir modal de crear
+    function abrirModalCrear() {
+        document.getElementById('createCuentaForm').reset();
+        const modal = new bootstrap.Modal(document.getElementById('createCuentaModal'));
+        modal.show();
+    }
+
+    // Crear cuenta
+    async function crearCuenta() {
+        const codigo = document.getElementById('codigo_create').value.trim();
+        const operador = document.getElementById('operador_create').value.trim();
+        const descripcion = document.getElementById('descripcion_create').value.trim() || null;
+
+        if (!codigo || !operador) {
+            Toast.error('Por favor completa todos los campos requeridos');
+            return;
+        }
+
+        try {
+            const resp = await fetch('/cuenta_padre/crear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ codigo, operador, descripcion })
+            });
+            const data = await resp.json();
+
+            if (data.ok) {
+                Toast.success(data.msg);
+                bootstrap.Modal.getInstance(document.getElementById('createCuentaModal')).hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                Toast.error(data.msg || 'Error al crear cuenta');
+            }
+        } catch (e) {
+            Toast.error('Error de conexión: ' + e.message);
+        }
+    }
+
+    // Abrir modal de editar
+    function abrirModalEditar(id, codigo, operador, descripcion) {
+        document.getElementById('cuenta_id_edit').value = id;
+        document.getElementById('codigo_edit').value = codigo;
+        document.getElementById('operador_edit').value = operador;
+        document.getElementById('descripcion_edit').value = descripcion;
+
+        const modal = new bootstrap.Modal(document.getElementById('updateCuentaModal'));
+        modal.show();
+    }
+
+    // Actualizar cuenta
+    async function actualizarCuenta() {
+        const cuenta_id = document.getElementById('cuenta_id_edit').value;
+        const codigo = document.getElementById('codigo_edit').value.trim();
+        const operador = document.getElementById('operador_edit').value.trim();
+        const descripcion = document.getElementById('descripcion_edit').value.trim() || null;
+
+        if (!codigo || !operador) {
+            Toast.error('Por favor completa todos los campos requeridos');
+            return;
+        }
+
+        try {
+            const resp = await fetch(`/cuenta_padre/editar/${cuenta_id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nuevo_codigo: codigo, nuevo_operador: operador, nueva_descripcion: descripcion })
+            });
+            const data = await resp.json();
+
+            if (data.ok) {
+                Toast.success(data.msg);
+                bootstrap.Modal.getInstance(document.getElementById('updateCuentaModal')).hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                Toast.error(data.msg || 'Error al actualizar cuenta');
+            }
+        } catch (e) {
+            Toast.error('Error de conexión: ' + e.message);
+        }
+    }
+
+    // Confirmar eliminación
+    function confirmarEliminacion(id, codigo) {
+        cuentaIdActual = id;
+        document.getElementById('confirmMessage').textContent = `¿Estás seguro de que deseas eliminar la cuenta "${codigo}"?`;
+
+        const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        modal.show();
+    }
+
+    // Confirmar acción de eliminación
+    async function confirmarEliminacionAccion() {
+        try {
+            const resp = await fetch('/cuentas_padre', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: cuentaIdActual })
+            });
+            const data = await resp.json();
+
+            if (data.ok) {
+                Toast.success(data.msg);
+                bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                Toast.error(data.msg || 'Error en la operación');
+            }
+        } catch (e) {
+            Toast.error('Error de conexión: ' + e.message);
+        }
+    }
+</script>
+
+{% endblock %}

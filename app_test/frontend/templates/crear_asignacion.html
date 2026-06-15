@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Nueva Asignación{% endblock %}
+
+{% block styles %}
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 30px;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .form-container h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 1.8rem;
+        color: #1a1a1a;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+    }
+
+    .form-group .info-text {
+        font-size: 0.85em;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .btn-crear {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.05em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .btn-crear:hover {
+        background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-1px);
+    }
+
+    .btn-crear:active {
+        transform: translateY(0);
+    }
+
+    .required {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="form-container">
+    <h1>Nueva Asignación</h1>
+
+    <form id="asignacionForm">
+        <div class="form-group">
+            <label for="empleado_search">Empleado <span class="required">*</span></label>
+            <input type="text" id="empleado_search" class="form-control" placeholder="Escribe el nombre o ID del empleado...">
+            <input type="hidden" id="empleado_id">
+            <div class="info-text">Solo se muestran empleados activos sin asignación vigente</div>
+        </div>
+
+        <div class="form-group">
+            <label for="linea_search">Línea <span class="required">*</span></label>
+            <input type="text" id="linea_search" class="form-control" placeholder="Escribe el número o ID de la línea...">
+            <input type="hidden" id="linea_id">
+            <div class="info-text">Solo se muestran líneas disponibles</div>
+        </div>
+
+        <div class="form-group">
+            <label for="imei_search">Equipo (IMEI) <span class="required">*</span></label>
+            <input type="text" id="imei_search" class="form-control" placeholder="Escribe el modelo o IMEI del equipo...">
+            <input type="hidden" id="imei">
+            <div class="info-text">Solo se muestran equipos disponibles</div>
+        </div>
+
+        <div class="form-group">
+            <label for="observaciones">Observaciones</label>
+            <textarea id="observaciones" name="observaciones" class="form-control" rows="3" placeholder="Notas adicionales sobre la asignación (opcional)"></textarea>
+        </div>
+
+        <button type="button" class="btn-crear" onclick="crearAsignacion()">Crear Asignación</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Autocomplete: Empleado
+        new App.Autocomplete({
+            input: document.getElementById('empleado_search'),
+            hidden: document.getElementById('empleado_id'),
+            endpoint: '/api/empleados',
+        });
+
+        // Autocomplete: Línea (disponibles)
+        new App.Autocomplete({
+            input: document.getElementById('linea_search'),
+            hidden: document.getElementById('linea_id'),
+            endpoint: '/api/lineas',
+        });
+
+        // Autocomplete: Equipo (disponibles)
+        new App.Autocomplete({
+            input: document.getElementById('imei_search'),
+            hidden: document.getElementById('imei'),
+            endpoint: '/api/equipos_disponibles',
+        });
+    });
+
+    async function crearAsignacion() {
+        const empleado_id = document.getElementById('empleado_id').value.trim();
+        const linea_id = document.getElementById('linea_id').value.trim();
+        const imei = document.getElementById('imei').value.trim();
+        const observaciones = document.getElementById('observaciones').value.trim() || null;
+
+        if (!empleado_id || !linea_id || !imei) {
+            Toast.error('Empleado, línea e IMEI son obligatorios. Selecciona cada uno de la lista.');
+            return;
+        }
+
+        try {
+            await App.apiCall('/asignar', {
+                method: 'POST',
+                body: JSON.stringify({ empleado_id, linea_id, imei, observaciones })
+            });
+            Toast.success('Asignación creada correctamente');
+            window.location.href = '/asignaciones';
+        } catch (err) {
+            Toast.error(err.message);
+        }
+    }
+</script>
+
+{% endblock %}

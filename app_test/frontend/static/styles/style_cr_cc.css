@@ -1,0 +1,91 @@
+/* Contenedor general */
+@import url('https://fonts.googleapis.com/css2?family=Gochi+Hand&display=swap');
+
+body{
+    font-family: 'Gochi Hand', cursive;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+}
+
+
+
+.crear-container {
+    text-align: center;
+    padding: 20px;
+}
+
+.titulo-crear {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 35px;
+}
+
+/* Formulario vertical */
+.form-cc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+/* Inputs principales */
+.form-cc label {
+    font-size: 20px;
+    margin-top: 10px;
+}
+
+.form-cc input {
+    width: 300px;
+    padding: 8px;
+    border: 2px solid #666;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+/* Contenedor azul */
+.director-box {
+    display: flex;
+    margin-top: 20px;
+    border: 3px solid #666;
+}
+
+.director-left,
+.director-right {
+    flex: 1;
+    padding: 20px;
+    background-color: #8ac6ea;
+    border-right: 3px solid #666;
+}
+
+.director-right {
+    background-color: #b5daf1;
+    border-right: none;
+}
+
+.director-box p {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.director-box input {
+    width: 80%;
+}
+
+/* Botón crear */
+.btn-crear {
+    margin-top: 30px;
+    padding: 15px 40px;
+    background-color: #4da3ff;
+    border: 3px solid #333;
+    font-size: 22px;
+    font-family: 'Gochi Hand', cursive;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-crear:hover {
+    transform: scale(1.05);
+    background-color: #3993ff;
+}

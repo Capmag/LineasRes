@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Áreas{% endblock %}
+
+{% block styles %}
+<style>
+    .areas-table-wrapper {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Áreas</h1>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success btn-lg" onclick="abrirModalCrear()">
+                + Nueva Área
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla de Áreas -->
+    {% if areas %}
+    <div class="data-card">
+        <div class="table-toolbar">
+            <div class="toolbar-search">
+                <input type="text" id="searchAreas" placeholder="Buscar área o centro de costo...">
+            </div>
+            <span class="toolbar-info">{{ areas|length }} registros</span>
+        </div>
+        <div class="table-responsive">
+        <table class="table table-hover mb-0" id="areasTable">
+            <thead>
+                <tr>
+                    <th data-sort="text" width="10%">ID</th>
+                    <th data-sort="text" width="30%">Nombre</th>
+                    <th data-sort="text" width="35%">Centro de Costos</th>
+                    <th width="25%">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for area in areas %}
+                <tr data-id="{{ area.id }}">
+                    <td>
+                        <span class="badge bg-secondary">{{ area.id }}</span>
+                    </td>
+                    <td><strong>{{ area.nombre }}</strong></td>
+                    <td>{{ area.centro_costos or '—' }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary"
+                            data-id="{{ area.id }}"
+                            data-nombre="{{ area.nombre }}"
+                            data-cc-id="{{ area.centro_costo_id }}"
+                            data-cc-nombre="{{ area.centro_costos or '' }}"
+                            onclick="abrirModalEditar(this.dataset)">
+                            Editar
+                        </button>
+                        <button class="btn btn-sm btn-danger"
+                            data-id="{{ area.id }}"
+                            data-nombre="{{ area.nombre }}"
+                            onclick="confirmarEliminacion(this.dataset.id, this.dataset.nombre)">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        <div class="pagination-wrapper" id="areasPagination"></div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <h5>No hay áreas registradas</h5>
+        <p class="mb-3">Comienza agregando tu primera área</p>
+        <button class="btn btn-success btn-lg" onclick="abrirModalCrear()">+ Crear Área</button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de Crear -->
+<div class="modal fade" id="createAreaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Área</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createAreaForm">
+                    <div class="mb-3">
+                        <label for="id_create" class="form-label">ID <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="id_create" required placeholder="Ej: AREA001">
+                        <small class="form-text">Identificador único del área</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nombre_create" class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nombre_create" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Centro de Costos <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="cc_search_create" placeholder="Escribe el nombre o ID del centro de costo...">
+                        <input type="hidden" id="cc_id_create">
+                        <small class="form-text">Incluye el director responsable en la lista de sugerencias</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="crearArea()">Crear</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Editar -->
+<div class="modal fade" id="updateAreaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Área</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateAreaForm">
+                    <input type="hidden" id="area_id_edit">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nombre_edit" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Centro de Costos <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="cc_search_edit" placeholder="Escribe el nombre o ID del centro de costo...">
+                        <input type="hidden" id="cc_edit">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="actualizarArea()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmBtn" onclick="confirmarEliminacionAccion()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let areaIdActual = null;
+    let ccAcCreate = null;
+    let ccAcEdit = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (document.getElementById('areasTable')) {
+            new App.DataTable({
+                tableId: 'areasTable',
+                searchInputId: 'searchAreas',
+                pageSize: 15,
+                paginationId: 'areasPagination',
+            });
+        }
+
+        ccAcCreate = new App.Autocomplete({
+            input: document.getElementById('cc_search_create'),
+            hidden: document.getElementById('cc_id_create'),
+            endpoint: '/api/centros_costo',
+        });
+
+        ccAcEdit = new App.Autocomplete({
+            input: document.getElementById('cc_search_edit'),
+            hidden: document.getElementById('cc_edit'),
+            endpoint: '/api/centros_costo',
+        });
+    });
+
+    function abrirModalCrear() {
+        document.getElementById('createAreaForm').reset();
+        if (ccAcCreate) ccAcCreate.clear();
+        new bootstrap.Modal(document.getElementById('createAreaModal')).show();
+    }
+
+    async function crearArea() {
+        const id = document.getElementById('id_create').value.trim();
+        const nombre = document.getElementById('nombre_create').value.trim();
+        const centro_costo_id = document.getElementById('cc_id_create').value.trim();
+        const cc_text = document.getElementById('cc_search_create').value.trim();
+
+        if (!id || !nombre) {
+            Toast.error('ID y nombre son obligatorios');
+            return;
+        }
+        if (!centro_costo_id) {
+            Toast.error('Selecciona un centro de costo de la lista de sugerencias');
+            return;
+        }
+        if (cc_text && !centro_costo_id) {
+            Toast.error('Selecciona un centro de costo de la lista de sugerencias');
+            return;
+        }
+
+        try {
+            await App.apiCall('/area/crear', {
+                method: 'POST',
+                body: JSON.stringify({ id, nombre, centro_costo_id })
+            });
+            Toast.success('Área creada correctamente');
+            bootstrap.Modal.getInstance(document.getElementById('createAreaModal')).hide();
+            setTimeout(() => location.reload(), 800);
+        } catch (e) {
+            Toast.error(e.message);
+        }
+    }
+
+    function abrirModalEditar(d) {
+        document.getElementById('area_id_edit').value = d.id;
+        document.getElementById('nombre_edit').value = d.nombre;
+        if (ccAcEdit) {
+            ccAcEdit.setValue(d.ccId || '', d.ccNombre || '');
+        }
+        new bootstrap.Modal(document.getElementById('updateAreaModal')).show();
+    }
+
+    async function actualizarArea() {
+        const area_id = document.getElementById('area_id_edit').value;
+        const nuevo_nombre = document.getElementById('nombre_edit').value.trim();
+        const nuevo_cc = document.getElementById('cc_edit').value.trim() || null;
+        const cc_text = document.getElementById('cc_search_edit').value.trim();
+
+        if (!nuevo_nombre) {
+            Toast.error('El nombre es obligatorio');
+            return;
+        }
+        if (!nuevo_cc) {
+            Toast.error('Selecciona un centro de costo de la lista');
+            return;
+        }
+        if (cc_text && !nuevo_cc) {
+            Toast.error('Selecciona un centro de costo de la lista o borra el campo');
+            return;
+        }
+
+        try {
+            await App.apiCall(`/area/editar/${area_id}`, {
+                method: 'POST',
+                body: JSON.stringify({ nuevo_nombre, nuevo_cc })
+            });
+            Toast.success('Área actualizada');
+            bootstrap.Modal.getInstance(document.getElementById('updateAreaModal')).hide();
+            setTimeout(() => location.reload(), 600);
+        } catch (e) {
+            Toast.error(e.message);
+        }
+    }
+
+    function confirmarEliminacion(id, nombre) {
+        areaIdActual = id;
+        document.getElementById('confirmMessage').textContent =
+            `¿Estás seguro de que deseas eliminar el área "${nombre}"?`;
+        new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    }
+
+    async function confirmarEliminacionAccion() {
+        try {
+            await App.apiCall('/areas', {
+                method: 'POST',
+                body: JSON.stringify({ id: areaIdActual })
+            });
+            Toast.success('Área eliminada correctamente');
+            bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+            setTimeout(() => location.reload(), 1000);
+        } catch (e) {
+            Toast.error(e.message);
+        }
+    }
+</script>
+
+{% endblock %}

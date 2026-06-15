@@ -1,0 +1,110 @@
+/* -------- Fuente solo para esta vista -------- */
+@import url('https://fonts.googleapis.com/css2?family=Gochi+Hand&display=swap');
+
+body {
+    font-family: 'Gochi Hand', cursive;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+}
+
+
+.empleados-container {
+    width: 90%;
+    max-width: 1100px;
+    margin: 30px auto;
+    text-align: center;
+    font-family: 'Gochi Hand', cursive;
+}
+
+/* -------- Título -------- */
+.titulo-lista {
+    font-size: 36px;
+    margin-bottom: 25px;
+    font-weight: bold;
+}
+
+/* -------- Contenedor Scroll -------- */
+.tabla-empleados {
+    width: 100%;
+    max-height: 420px;
+    overflow-y: auto;
+    border: 2px solid #ccc;
+    background: white;
+}
+
+/* -------- Cada empleado (fila) -------- */
+.empleado-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    border-bottom: 1px solid #aaa;
+    align-items: center;
+    height: 90px; /* Mantiene las filas parejas */
+    box-sizing: border-box;
+}
+
+/* -------- Grid ALINEADO -------- */
+.empleado-info {
+    display: grid;
+    grid-template-columns: 150px 200px 180px 180px; /* 4 columnas */
+    grid-template-rows: auto auto; /* 2 filas */
+    row-gap: 6px;
+    column-gap: 25px;
+    text-align: left;
+    font-size: 16px;
+}
+
+/* Esto asigna manualmente las posiciones */
+.empleado-info div:nth-child(5) {
+    grid-column: 1 / span 3;  /* Correo ocupa 3 columnas */
+}
+
+.empleado-info div:nth-child(6) {
+    grid-column: 4; /* Estado queda en la columna 4 */
+}
+
+
+/* -------- Columna de iconos -------- */
+.empleado-acciones {
+    min-width: 120px; /* Evita que se muevan o empujen el layout */
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+/* -------- Botones de los iconos -------- */
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.icon-btn:hover .icono {
+    filter: brightness(0.85);
+}
+
+/* -------- Iconos -------- */
+.icono {
+    width: 35px;
+    height: 35px;
+}
+
+/* -------- Botón agregar -------- */
+.btn-agregar {
+    background-color: #f3f3f3;
+    border: 3px solid #666;
+    padding: 12px 0;
+    width: 260px;
+    margin: 25px auto 0 auto;
+    font-size: 25px;
+    border-radius: 6px;
+    font-family: 'Gochi Hand', cursive;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-agregar:hover {
+    background-color: #e0e0e0;
+}

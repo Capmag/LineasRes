@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"F:\\\\downs\\\\env\" -Force | Select-Object Name, @{n=\"Type\";e={if\\($_.PSIsContainer\\){\"DIR\"}else{\"FILE\"}}} | Format-Table -AutoSize)",
+      "Bash(.venv\\\\Scripts\\\\pip install *)",
+      "Bash(rm -f \"F:\\\\downloads\\\\env\\\\app_test\\\\frontend\\\\templates\\\\crear_empleado.html\" \"F:\\\\downs\\\\env\\\\app_test\\\\frontend\\\\templates\\\\actualizar_empleado.html\")",
+      "Bash(curl -s http://localhost:5000/empleados)",
+      "Bash(curl -s http://localhost:5000/)",
+      "Bash(curl -s http://localhost:5000/static/modal-manager.js)",
+      "Bash(curl -s http://localhost:5000/static/toast-manager.js)",
+      "Bash(curl -s http://localhost:5000/static/styles/overrides.css)",
+      "Bash(wc -l \"F:\\\\\\\\downs\\\\\\\\env\\\\\\\\app_test\\\\\\\\frontend\\\\\\\\static\\\\\\\\styles\\\\\\\\overrides.css\")",
+      "Bash(cd \"F:\\\\\\\\downs\\\\\\\\env\\\\\\\\app_test\")",
+      "Bash(curl -s http://localhost:5000/lineas)",
+      "Bash(curl -s http://localhost:5000/moviles)",
+      "Bash(curl -s http://localhost:5000/asignaciones)",
+      "Bash(curl -s http://localhost:5000/centroscostos)",
+      "Bash(python -m py_compile \"F:/downs/env/app_test/backend/centros_costo.py\")",
+      "Bash(curl -s -o /dev/null -w \"/centroscostos: %{http_code}\\\\n\" http://localhost:5000/centroscostos)",
+      "Bash(curl -s http://localhost:5000/directores)",
+      "Bash(dir \"F:\\\\downs\\\\env\")",
+      "Bash(python -c ' *)",
+      "Bash(npm list *)",
+      "PowerShell(node --version)",
+      "PowerShell(npm list -g docx 2>$null)",
+      "WebFetch(domain:docs.ultralytics.com)",
+      "Bash(mkdir -p \"F:\\\\downs\\\\car_detection\\\\app\")"
+    ]
+  }
+}

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Equipo{% endblock %}
+
+{% block styles %}
+<style>
+    .historial-header {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+
+    .info-box {
+        background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
+        border-left: 4px solid #c2185b;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
+
+    .info-box-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #333;
+        font-size: 0.9em;
+        margin-bottom: 5px;
+    }
+
+    .info-value {
+        color: #555;
+        font-size: 1.1em;
+    }
+
+    .historial-table-wrapper {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .badge-alta {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .badge-baja {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .badge-reasignacion {
+        background-color: #cfe2ff;
+        color: #084298;
+    }
+
+    .btn-volver {
+        margin-bottom: 20px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+
+    .imei-mono {
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        font-size: 0.95em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <a href="/moviles" class="btn btn-secondary btn-volver">Volver a Equipos</a>
+        </div>
+        <div class="col-auto">
+            <h1>Historial de Equipo</h1>
+        </div>
+    </div>
+
+    <!-- Información Actual -->
+    <div class="historial-header">
+        <h5 style="margin-bottom: 20px; color: #333;">Información del Equipo</h5>
+        <div class="info-box">
+            <div class="info-box-row">
+                <div class="info-item">
+                    <span class="info-label">IMEI</span>
+                    <span class="info-value imei-mono">{{ equipo.imei }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Marca</span>
+                    <span class="info-value">{{ equipo.marca or '—' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Modelo</span>
+                    <span class="info-value">{{ equipo.modelo or '—' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Serial</span>
+                    <span class="info-value">{{ equipo.serial or '—' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Estado Actual</span>
+                    <span class="info-value">
+                        <span class="badge bg-{{ 'success' if equipo.estatus == 'Disponible' else 'primary' if equipo.estatus == 'Asignado' else 'secondary' }}">
+                            {{ equipo.estatus }}
+                        </span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Asignaciones -->
+    {% if historial %}
+    <div class="historial-table-wrapper">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Fecha Inicio</th>
+                    <th>Fecha Fin</th>
+                    <th>Tipo de Movimiento</th>
+                    <th>Empleado</th>
+                    <th>Línea</th>
+                    <th>Motivo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in historial %}
+                <tr>
+                    <td>{{ item.fecha_inicio.strftime('%d/%m/%Y %H:%M') if item.fecha_inicio else '—' }}</td>
+                    <td>{{ item.fecha_fin.strftime('%d/%m/%Y %H:%M') if item.fecha_fin else '—' }}</td>
+                    <td>
+                        <span class="badge badge-{{ item.tipo_movimiento|lower|replace('á', 'a') }}">
+                            {{ item.tipo_movimiento }}
+                        </span>
+                    </td>
+                    <td>{{ item.empleado }}</td>
+                    <td>{{ item.linea }}</td>
+                    <td>{{ item.motivo or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h5>Sin historial</h5>
+        <p>No hay registros de asignaciones para este equipo.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

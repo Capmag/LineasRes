@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Líneas{% endblock %}
+
+{% block styles %}
+<style>
+    .estatus-badge-custom {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.85em;
+        font-weight: 600;
+    }
+
+    .estatus-disponible { background-color: #d1fae5; color: #047857; }
+    .estatus-asignado { background-color: #dbeafe; color: #1e40af; }
+    .estatus-baja { background-color: #fee2e2; color: #991b1b; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Líneas</h1>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success btn-lg" onclick="abrirModalCrear()">
+                + Nueva Línea
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla de Líneas -->
+    {% if lineas %}
+    <div class="data-card">
+        <div class="table-toolbar">
+            <div class="toolbar-search">
+                <input type="text" id="searchLineas" placeholder="Buscar línea, plan, operador...">
+            </div>
+            <span class="toolbar-info">{{ lineas|length }} registros</span>
+        </div>
+        <div class="table-responsive">
+        <table class="table table-hover mb-0" id="lineasTable">
+            <thead>
+                <tr>
+                    <th data-sort="text" width="10%">ID</th>
+                    <th data-sort="text" width="15%">Teléfono</th>
+                    <th data-sort="text" width="15%">Plan</th>
+                    <th data-sort="text" width="15%">Operador</th>
+                    <th data-sort="text" width="12%">Estado</th>
+                    <th data-sort="text" width="18%">Asignado a</th>
+                    <th width="15%">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for linea in lineas %}
+                <tr data-id="{{ linea.id }}">
+                    <td>
+                        <span class="badge bg-secondary">{{ linea.id }}</span>
+                    </td>
+                    <td><strong>{{ linea.telefono }}</strong></td>
+                    <td>{{ linea.plan }}</td>
+                    <td>{{ linea.operador or '—' }}</td>
+                    <td>
+                        <span class="estatus-badge-custom estatus-{{ linea.estatus|lower }}">
+                            {{ linea.estatus }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if linea.empleado_nombre %}
+                            <small>{{ linea.empleado_nombre }}<br>{{ linea.area_nombre or '' }}</small>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary"
+                            onclick='abrirModalEditar({{ {"id": linea.id, "lada": linea.lada, "numero": linea.numero, "plan": linea.plan, "iccid": linea.iccid or "", "cuenta_padre_id": linea.cuenta_padre_id or "", "operador": linea.operador or ""}|tojson }})'>
+                            Editar
+                        </button>
+                        <a href="/linea/{{ linea.id }}/historial" class="btn btn-sm btn-info">
+                            Historial
+                        </a>
+                        {% if linea.estatus != 'Baja' %}
+                        <button class="btn btn-sm btn-warning" onclick="confirmarBaja('{{ linea.id }}', '{{ linea.telefono }}')">
+                            Baja
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        <div class="pagination-wrapper" id="lineasPagination"></div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <h5>No hay líneas registradas</h5>
+        <p class="mb-3">Comienza agregando tu primera línea</p>
+        <button class="btn btn-success btn-lg" onclick="abrirModalCrear()">+ Crear Línea</button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de Crear -->
+<div class="modal fade" id="createLineaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">➕ Nueva Línea</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createLineaForm">
+                    <div class="mb-3">
+                        <label for="id_create" class="form-label">ID <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="id_create" required placeholder="Ej: LIN001">
+                        <small class="form-text">Identificador único de la línea</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="telefono_create" class="form-label">Teléfono <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="telefono_create" required maxlength="20" placeholder="Ej: 5512345678">
+                        <small class="form-text">Escribe el número completo</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="plan_create" class="form-label">Plan <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="plan_create" required placeholder="Ej: Plan 5GB">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cuenta_padre_create" class="form-label">Operador (cuenta padre) <span class="text-danger">*</span></label>
+                        <select class="form-select" id="cuenta_padre_create" required>
+                            <option value="">-- Seleccionar Operador --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="iccid_create" class="form-label">ICCID</label>
+                        <input type="text" class="form-control" id="iccid_create" placeholder="(opcional)">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="crearLinea()">Crear</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Editar -->
+<div class="modal fade" id="updateLineaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Línea</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateLineaForm">
+                    <input type="hidden" id="linea_id_edit">
+                    <div class="mb-3">
+                        <label class="form-label">Teléfono <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="telefono_edit" required maxlength="20">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Plan <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="plan_edit" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Operador (cuenta padre) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="cuenta_padre_search_edit" placeholder="Escribe nombre o ID del operador...">
+                        <input type="hidden" id="cuenta_padre_edit">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ICCID</label>
+                        <input type="text" class="form-control" id="iccid_edit" placeholder="(opcional)">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="actualizarLinea()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación (Baja) -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Marcar como Baja</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="confirmBtn" onclick="confirmarBajaAccion()">Marcar como Baja</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let lineaIdActual = null;
+
+    let cuentaPadreAcCreate = null;
+    let cuentaPadreAcEdit = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (document.getElementById('lineasTable')) {
+            new App.DataTable({
+                tableId: 'lineasTable',
+                searchInputId: 'searchLineas',
+                pageSize: 15,
+                paginationId: 'lineasPagination',
+            });
+        }
+        await cargarCuentasPadre();
+
+        // Autocomplete para cuenta padre en modal editar
+        cuentaPadreAcEdit = new App.Autocomplete({
+            input: document.getElementById('cuenta_padre_search_edit'),
+            hidden: document.getElementById('cuenta_padre_edit'),
+            endpoint: '/api/cuentas_padre',
+        });
+
+        // Si vienen con ?nuevo=1 desde el dashboard, abrir modal automáticamente
+        if (new URLSearchParams(window.location.search).get('nuevo') === '1') {
+            setTimeout(abrirModalCrear, 200);
+        }
+    });
+
+    async function cargarCuentasPadre() {
+        try {
+            const resp = await fetch('/api/cuentas_padre');
+            const cuentas = await resp.json();
+            const select = document.getElementById('cuenta_padre_create');
+            if (!select) return;
+            cuentas.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.label || c.operador;
+                select.appendChild(opt);
+            });
+        } catch (e) {
+            console.error('Error cargando cuentas padre:', e);
+        }
+    }
+
+    // Abrir modal de crear
+    function abrirModalCrear() {
+        document.getElementById('createLineaForm').reset();
+        const modal = new bootstrap.Modal(document.getElementById('createLineaModal'));
+        modal.show();
+    }
+
+    // Crear línea
+    async function crearLinea() {
+        const id = document.getElementById('id_create').value.trim();
+        const telefono = document.getElementById('telefono_create').value.trim();
+        const plan = document.getElementById('plan_create').value.trim();
+        const cuenta_padre_id = document.getElementById('cuenta_padre_create').value;
+        const iccid = document.getElementById('iccid_create').value.trim() || null;
+
+        if (!id || !telefono || !plan || !cuenta_padre_id) {
+            Toast.error('ID, teléfono, plan y operador son obligatorios');
+            return;
+        }
+
+        try {
+            const resp = await fetch('/linea/crear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, telefono, plan, cuenta_padre_id, iccid })
+            });
+            const data = await resp.json();
+
+            if (data.ok) {
+                Toast.success(data.msg);
+                bootstrap.Modal.getInstance(document.getElementById('createLineaModal')).hide();
+                setTimeout(() => location.reload(), 800);
+            } else {
+                Toast.error(data.msg || 'Error al crear línea');
+            }
+        } catch (e) {
+            Toast.error('Error de conexión: ' + e.message);
+        }
+    }
+
+    // Abrir modal de editar (recibe objeto con todos los datos)
+    function abrirModalEditar(d) {
+        document.getElementById('linea_id_edit').value = d.id;
+        // Reconstruir teléfono: si lada > 0, mostrar "lada-numero"; sino solo numero
+        const tel = String(d.numero);
+        document.getElementById('telefono_edit').value = tel;
+        document.getElementById('plan_edit').value = d.plan;
+        document.getElementById('iccid_edit').value = d.iccid || '';
+        if (cuentaPadreAcEdit) {
+            cuentaPadreAcEdit.setValue(d.cuenta_padre_id || '', d.operador || '');
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById('updateLineaModal'));
+        modal.show();
+    }
+
+    // Actualizar línea
+    async function actualizarLinea() {
+        const linea_id = document.getElementById('linea_id_edit').value;
+        const nuevo_telefono = document.getElementById('telefono_edit').value.trim();
+        const nuevo_plan = document.getElementById('plan_edit').value.trim();
+        const nuevo_iccid = document.getElementById('iccid_edit').value.trim() || null;
+        const nuevo_cuenta_padre_id = document.getElementById('cuenta_padre_edit').value.trim() || null;
+        const cuenta_text = document.getElementById('cuenta_padre_search_edit').value.trim();
+
+        if (!nuevo_telefono || !nuevo_plan) {
+            Toast.error('Teléfono y plan son obligatorios');
+            return;
+        }
+        if (cuenta_text && !nuevo_cuenta_padre_id) {
+            Toast.error('Selecciona un operador de la lista de sugerencias');
+            return;
+        }
+
+        try {
+            await App.apiCall(`/linea/editar/${linea_id}`, {
+                method: 'POST',
+                body: JSON.stringify({ nuevo_telefono, nuevo_plan, nuevo_iccid, nuevo_cuenta_padre_id })
+            });
+            Toast.success('Línea actualizada');
+            bootstrap.Modal.getInstance(document.getElementById('updateLineaModal')).hide();
+            setTimeout(() => location.reload(), 600);
+        } catch (e) {
+            Toast.error(e.message);
+        }
+    }
+
+    // Confirmar baja
+    function confirmarBaja(id, telefono) {
+        lineaIdActual = id;
+        document.getElementById('confirmMessage').textContent = `¿Estás seguro de que deseas marcar como baja la línea ${telefono}?`;
+
+        const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        modal.show();
+    }
+
+    // Confirmar acción de baja
+    async function confirmarBajaAccion() {
+        try {
+            const resp = await fetch('/lineas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: lineaIdActual })
+            });
+            const data = await resp.json();
+
+            if (data.ok) {
+                Toast.success(data.msg);
+                bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                Toast.error(data.msg || 'Error en la operación');
+            }
+        } catch (e) {
+            Toast.error('Error de conexión: ' + e.message);
+        }
+    }
+</script>
+
+{% endblock %}

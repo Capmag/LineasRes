@@ -1,0 +1,71 @@
+/* Fuente estilo cartoon similar a la imagen */
+@import url('https://fonts.googleapis.com/css2?family=Gochi+Hand&display=swap');
+
+body {
+    font-family: 'Gochi Hand', cursive;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
+}
+
+/* Título del formulario */
+.subtitulo {
+    text-align: center;
+    font-size: 36px;
+    margin-top: 30px;
+}
+
+/* Contenedor general del formulario */
+.form-actualizar {
+    display: flex;
+    justify-content: center;
+    gap: 80px;
+    margin-top: 40px;
+}
+
+/* Columnas con inputs */
+.form-actualizar .col {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    font-size: 20px;
+}
+
+/* Inputs estilo imagen */
+.form-actualizar input {
+    width: 200px;
+    padding: 5px 10px;
+    font-size: 18px;
+    border: 2px solid #888;
+    border-radius: 4px;
+    outline: none;
+}
+
+.form-actualizar input[readonly] {
+    background-color: #f3f3f3;
+    color: #666;
+}
+
+/* Centrar botón */
+
+.boton-centro {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+/* Botón verde estilo cartoon */
+.btn-actualizar {
+    background-color: #7eff40;
+    border: 3px solid #5fc92f;
+    padding: 12px 40px;
+    font-size: 26px;
+    font-family: 'Gochi Hand', cursive;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+.btn-actualizar:hover {
+    background-color: #6bdf35;
+}

@@ -1,0 +1,102 @@
+/* Contenedor general */
+@import url('https://fonts.googleapis.com/css2?family=Gochi+Hand&display=swap');
+
+body {
+    font-family: 'Gochi Hand', cursive;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+}
+
+.centros-container {
+    text-align: center;
+    padding: 20px;
+}
+
+/* Título principal */
+.titulo-centros {
+    font-size: 32px;
+    margin-bottom: 25px;
+    font-weight: bold;
+}
+
+/* Contenedor con borde gris */
+.tabla-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+}
+
+/* Tabla */
+.tabla-centros {
+    width: 80%;
+    border-collapse: collapse;
+    font-size: 18px;
+    background-color: white;
+    border: 3px solid #888;
+}
+
+.tabla-centros th {
+    background-color: #eee;
+    padding: 10px;
+    border: 2px solid #666;
+}
+
+.tabla-centros td {
+    padding: 10px;
+    border: 1px solid #666;
+}
+
+/* Filas alternadas como la imagen */
+.tabla-centros tr:nth-child(even) {
+    background-color: #dcdcdc;
+}
+
+/* Acciones (íconos alineados) */
+.acciones {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.icon-btn img {
+    width: 35px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.icon-btn img:hover {
+    transform: scale(1.2);
+}
+
+/* Botón Agregar */
+.btn-agregar-wrapper {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.btn-agregar {
+    display: inline-block;
+    padding: 15px 40px;
+    font-family: "Comic Sans MS";
+    background-color: #f3f3f3;
+    border: 3px solid #666;
+    font-size: 24px;
+    cursor: pointer;
+    text-decoration: none;
+    color: black;
+    transition: 0.2s;
+}
+
+.btn-agregar:hover {
+    background-color: #e0e0e0;
+    transform: scale(1.05);
+}
+
+.icon-btn {
+    border: none;
+    background: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+}

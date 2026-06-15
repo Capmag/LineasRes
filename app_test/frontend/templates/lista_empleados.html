@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}Empleados{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h1 class="mb-0">Empleados</h1>
+            <p class="text-muted small mt-1 mb-0">Gestión de empleados y asignación de áreas</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success" onclick="abrirModalCrear()">
+                + Nuevo Empleado
+            </button>
+        </div>
+    </div>
+
+    <div class="data-card">
+        <div class="table-toolbar">
+            <div class="toolbar-search">
+                <input type="text" id="searchEmpleados" placeholder="Buscar por nombre, correo o área...">
+            </div>
+            <span class="toolbar-info" id="empleadosCount">{{ empleados|length }} registros</span>
+        </div>
+
+        {% if empleados %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="empleadosTable">
+                <thead>
+                    <tr>
+                        <th data-sort="text">Nombre</th>
+                        <th data-sort="text">Correo</th>
+                        <th data-sort="text">Área</th>
+                        <th data-sort="text">Estado</th>
+                        <th style="width: 220px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for empleado in empleados %}
+                    <tr data-id="{{ empleado.id }}">
+                        <td>
+                            <strong>{{ empleado.nombre }}</strong>
+                            {% if empleado.apellido %}<br><small class="text-muted">{{ empleado.apellido }}</small>{% endif %}
+                        </td>
+                        <td>{{ empleado.correo }}</td>
+                        <td>{{ empleado.area or '—' }}</td>
+                        <td>
+                            {% if empleado.estatus == 'Activo' %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary"
+                                data-id="{{ empleado.id }}"
+                                data-nombre="{{ empleado.nombre }}"
+                                data-apellido="{{ empleado.apellido or '' }}"
+                                data-correo="{{ empleado.correo }}"
+                                data-area-id="{{ empleado.area_id }}"
+                                data-area="{{ empleado.area or '' }}"
+                                onclick="abrirModalEditar(this.dataset.id, this.dataset.nombre, this.dataset.apellido, this.dataset.correo, this.dataset.areaId, this.dataset.area)">
+                                Editar
+                            </button>
+                            {% if empleado.estatus == 'Activo' %}
+                                <button class="btn btn-sm btn-warning"
+                                    onclick="confirmarCambioEstatus('{{ empleado.id }}', 'Inactivo')">
+                                    Dar de baja
+                                </button>
+                            {% else %}
+                                <button class="btn btn-sm btn-info"
+                                    onclick="confirmarCambioEstatus('{{ empleado.id }}', 'Activo')">
+                                    Reactivar
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-wrapper" id="empleadosPagination"></div>
+        {% else %}
+        <div class="alert alert-info text-center py-5 m-0">
+            <h5>No hay empleados registrados</h5>
+            <p class="mb-3">Comienza agregando tu primer empleado</p>
+            <button class="btn btn-success" onclick="abrirModalCrear()">+ Crear Empleado</button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Crear -->
+<div class="modal fade" id="createEmpleadoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Empleado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createEmpleadoForm">
+                    <div class="mb-3">
+                        <label class="form-label">ID <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="id_create" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nombre_create" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="apellido_create">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Correo <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="correo_create" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Área <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="area_search_create" placeholder="Escribe el nombre del área o centro de costo...">
+                        <input type="hidden" id="area_id_create">
+                        <small class="form-text text-muted">Se muestra el área y su centro de costo</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="crearEmpleado()">Crear</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="updateEmpleadoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Empleado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateEmpleadoForm">
+                    <input type="hidden" id="empleado_id_edit">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nombre_edit" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="apellido_edit">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Correo <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="correo_edit" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Área <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="area_search_edit" placeholder="Escribe el nombre del área o centro de costo...">
+                        <input type="hidden" id="area_edit">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="actualizarEmpleado()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar acción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage" class="mb-0"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmBtn" onclick="confirmarAccion()">Continuar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    let dataTable = null;
+    let empleadoIdActual = null;
+    let accionActual = null;
+    let acAreaCreate = null;
+    let acAreaEdit = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const table = document.getElementById('empleadosTable');
+        if (table) {
+            dataTable = new App.DataTable({
+                tableId: 'empleadosTable',
+                searchInputId: 'searchEmpleados',
+                pageSize: 15,
+                paginationId: 'empleadosPagination',
+            });
+        }
+
+        acAreaCreate = new App.Autocomplete({
+            input: document.getElementById('area_search_create'),
+            hidden: document.getElementById('area_id_create'),
+            endpoint: '/api/areas',
+        });
+
+        acAreaEdit = new App.Autocomplete({
+            input: document.getElementById('area_search_edit'),
+            hidden: document.getElementById('area_edit'),
+            endpoint: '/api/areas',
+        });
+    });
+
+    window.abrirModalCrear = function () {
+        document.getElementById('createEmpleadoForm').reset();
+        if (acAreaCreate) acAreaCreate.clear();
+        new bootstrap.Modal(document.getElementById('createEmpleadoModal')).show();
+    };
+
+    window.crearEmpleado = async function () {
+        const id = document.getElementById('id_create').value.trim();
+        const nombre = document.getElementById('nombre_create').value.trim();
+        const apellido = document.getElementById('apellido_create').value.trim() || null;
+        const correo = document.getElementById('correo_create').value.trim();
+        const area_id = document.getElementById('area_id_create').value.trim();
+
+        if (!id || !nombre || !correo) {
+            Toast.error('Completa todos los campos requeridos');
+            return;
+        }
+        if (!area_id) {
+            Toast.error('Selecciona un área de la lista de sugerencias');
+            return;
+        }
+
+        try {
+            await App.apiCall('/empleado/crear', {
+                method: 'POST',
+                body: JSON.stringify({ id, nombre, apellido, correo, area_id })
+            });
+            Toast.success('Empleado creado');
+            bootstrap.Modal.getInstance(document.getElementById('createEmpleadoModal')).hide();
+            setTimeout(() => location.reload(), 600);
+        } catch (e) {
+            Toast.error(e.message);
+        }
+    };
+
+    window.abrirModalEditar = function (id, nombre, apellido, correo, area_id, area_nombre) {
+        document.getElementById('empleado_id_edit').value = id;
+        document.getElementById('nombre_edit').value = nombre;
+        document.getElementById('apellido_edit').value = apellido;
+        document.getElementById('correo_edit').value = correo;
+        if (acAreaEdit) acAreaEdit.setValue(area_id || '', area_nombre || '');
+        new bootstrap.Modal(document.getElementById('updateEmpleadoModal')).show();
+    };
+
+    window.actualizarEmpleado = async function () {
+        const id = document.getElementById('empleado_id_edit').value;
+        const nuevo_nombre = document.getElementById('nombre_edit').value.trim();
+        const nuevo_apellido = document.getElementById('apellido_edit').value.trim() || null;
+        const nuevo_correo = document.getElementById('correo_edit').value.trim();
+        const nuevo_area = document.getElementById('area_edit').value.trim();
+
+        if (!nuevo_nombre || !nuevo_correo) {
+            Toast.error('Completa todos los campos requeridos');
+            return;
+        }
+        if (!nuevo_area) {
+            Toast.error('Selecciona un área de la lista de sugerencias');
+            return;
+        }
+
+        try {
+            await App.apiCall(`/empleado/editar/${id}`, {
+                method: 'POST',
+                body: JSON.stringify({ nuevo_nombre, nuevo_apellido, nuevo_correo, nuevo_area })
+            });
+            Toast.success('Empleado actualizado');
+            bootstrap.Modal.getInstance(document.getElementById('updateEmpleadoModal')).hide();
+            setTimeout(() => location.reload(), 600);
+        } catch (e) {
+            Toast.error(e.message);
+        }
+    };
+
+    window.confirmarCambioEstatus = function (id, nuevoEstatus) {
+        empleadoIdActual = id;
+        accionActual = nuevoEstatus;
+        const msg = nuevoEstatus === 'Inactivo'
+            ? '¿Dar de baja a este empleado?'
+            : '¿Reactivar a este empleado?';
+        document.getElementById('confirmMessage').textContent = msg;
+        document.getElementById('confirmBtn').textContent = nuevoEstatus === 'Inactivo' ? 'Dar de baja' : 'Reactivar';
+        document.getElementById('confirmBtn').className = `btn btn-${nuevoEstatus === 'Inactivo' ? 'danger' : 'info'}`;
+        new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    };
+
+    window.confirmarAccion = async function () {
+        const endpoint = accionActual === 'Inactivo'
+            ? `/empleado/baja/${empleadoIdActual}`
+            : `/empleado/reactivar/${empleadoIdActual}`;
+        try {
+            const data = await App.apiCall(endpoint, { method: 'POST' });
+            Toast.success(data.msg || 'Operación completada');
+            bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+            // Actualizar fila in-place sin recargar
+            actualizarFilaEstatus(empleadoIdActual, accionActual);
+        } catch (e) {
+            Toast.error(e.message);
+        }
+    };
+
+    function actualizarFilaEstatus(id, nuevoEstatus) {
+        const row = document.querySelector(`tr[data-id="${id}"]`);
+        if (!row) return;
+        const badgeCell = row.children[3];
+        const actionCell = row.children[4];
+
+        if (nuevoEstatus === 'Activo') {
+            badgeCell.innerHTML = '<span class="badge bg-success">Activo</span>';
+            actionCell.querySelectorAll('button.btn-info, button.btn-warning').forEach(b => b.remove());
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-sm btn-warning';
+            btn.textContent = 'Dar de baja';
+            btn.onclick = () => confirmarCambioEstatus(id, 'Inactivo');
+            actionCell.appendChild(btn);
+        } else {
+            badgeCell.innerHTML = '<span class="badge bg-danger">Inactivo</span>';
+            actionCell.querySelectorAll('button.btn-info, button.btn-warning').forEach(b => b.remove());
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-sm btn-info';
+            btn.textContent = 'Reactivar';
+            btn.onclick = () => confirmarCambioEstatus(id, 'Activo');
+            actionCell.appendChild(btn);
+        }
+    }
+})();
+</script>
+{% endblock %}

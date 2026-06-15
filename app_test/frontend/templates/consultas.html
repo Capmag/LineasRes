@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Consultas{% endblock %}
+
+{% block styles %}
+<style>
+    .consultas-filters {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+
+    .filter-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    .filter-btn {
+        flex: 1;
+        padding: 8px 12px;
+        border: 2px solid #dee2e6;
+        background-color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s;
+        font-size: 0.9em;
+        color: #666;
+    }
+
+    .filter-btn:hover {
+        border-color: #0066cc;
+        color: #0066cc;
+    }
+
+    .filter-btn.active {
+        background-color: #0066cc;
+        color: white;
+        border-color: #0066cc;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .results-table-wrapper {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+        margin-top: 30px;
+    }
+
+    .results-header {
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .results-header .count {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .warning-banner {
+        background-color: #fff3cd;
+        color: #664d03;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 0.9em;
+        border-left: 4px solid #ffc107;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+
+    .empty-state h5 {
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    .mono {
+        font-family: 'Courier New', monospace;
+        font-size: 0.9em;
+    }
+
+    @media (max-width: 768px) {
+        .consultas-filters {
+            padding: 20px;
+        }
+
+        .filter-section {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .filter-actions {
+            flex-direction: column;
+        }
+
+        .filter-actions button,
+        .filter-actions a {
+            width: 100%;
+        }
+
+        .results-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Consulta de Líneas y Personal</h1>
+        </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="consultas-filters">
+        <form id="filtrosForm" method="GET" action="/consultas">
+            <div class="filter-section">
+                <!-- Centro de Costo -->
+                <div>
+                    <label for="cc_select" class="form-label fw-bold">Centro de Costo</label>
+                    <select class="form-select" name="cc_id" id="cc_select" onchange="cargarAreas(this.value)">
+                        <option value="">-- Todos --</option>
+                        {% for cc in centros %}
+                        <option value="{{ cc.id }}" {% if filtros.cc_id == cc.id %}selected{% endif %}>
+                            {{ cc.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Área -->
+                <div>
+                    <label for="area_select" class="form-label fw-bold">Área</label>
+                    <select class="form-select" name="area_id" id="area_select">
+                        <option value="">-- Todas --</option>
+                        {% for area in areas %}
+                        <option value="{{ area.id }}" {% if filtros.area_id == area.id %}selected{% endif %}>
+                            {{ area.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Búsqueda de Texto -->
+                <div>
+                    <label for="texto_search" class="form-label fw-bold">Búsqueda</label>
+                    <input type="text" class="form-control" id="texto_search" name="texto"
+                           value="{{ filtros.texto }}"
+                           placeholder="Nombre, teléfono, correo...">
+                    <small class="text-muted">Nombre, teléfono o correo</small>
+                </div>
+
+                <!-- Estado de Línea -->
+                <div>
+                    <label for="estatus_select" class="form-label fw-bold">Estado de Línea</label>
+                    <select class="form-select" name="estatus" id="estatus_select">
+                        <option value="">-- Todos --</option>
+                        <option value="Disponible" {% if filtros.estatus == 'Disponible' %}selected{% endif %}>Disponible</option>
+                        <option value="Asignado" {% if filtros.estatus == 'Asignado' %}selected{% endif %}>Asignado</option>
+                        <option value="Externo" {% if filtros.estatus == 'Externo' %}selected{% endif %}>Externo</option>
+                        <option value="Baja" {% if filtros.estatus == 'Baja' %}selected{% endif %}>Baja</option>
+                    </select>
+                </div>
+
+                <!-- Asignación -->
+                <div>
+                    <label class="form-label fw-bold">Asignación</label>
+                    <div class="filter-buttons">
+                        <button type="button" class="filter-btn {% if filtros.asignada == 'todos' %}active{% endif %}"
+                                onclick="setFiltro('asignada','todos')">Todas</button>
+                        <button type="button" class="filter-btn {% if filtros.asignada == 'si' %}active{% endif %}"
+                                onclick="setFiltro('asignada','si')">Asignada</button>
+                        <button type="button" class="filter-btn {% if filtros.asignada == 'no' %}active{% endif %}"
+                                onclick="setFiltro('asignada','no')">Sin asignar</button>
+                    </div>
+                    <input type="hidden" name="asignada" id="inp_asignada" value="{{ filtros.asignada }}">
+                </div>
+
+                <!-- Equipo -->
+                <div>
+                    <label class="form-label fw-bold">Equipo</label>
+                    <div class="filter-buttons">
+                        <button type="button" class="filter-btn {% if filtros.con_equipo == 'todos' %}active{% endif %}"
+                                onclick="setFiltro('con_equipo','todos')">Todos</button>
+                        <button type="button" class="filter-btn {% if filtros.con_equipo == 'con' %}active{% endif %}"
+                                onclick="setFiltro('con_equipo','con')">Con equipo</button>
+                        <button type="button" class="filter-btn {% if filtros.con_equipo == 'sin' %}active{% endif %}"
+                                onclick="setFiltro('con_equipo','sin')">Sin equipo</button>
+                    </div>
+                    <input type="hidden" name="con_equipo" id="inp_con_equipo" value="{{ filtros.con_equipo }}">
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">
+                    Buscar
+                </button>
+                <a href="/consultas" class="btn btn-secondary">
+                    🔄 Limpiar Filtros
+                </a>
+                {% if resultados %}
+                <a href="/consultas/excel?{{ request.query_string.decode() }}" class="btn btn-success">
+                    Descargar Excel
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- RESULTADOS -->
+    {% if resultados %}
+    <div class="results-table-wrapper">
+        <div class="results-header">
+            <span class="count">
+                {{ total }} resultado{% if total != 1 %}s{% endif %} encontrado{% if total != 1 %}s{% endif %}
+            </span>
+            {% if total == 1000 %}
+            <div class="warning-banner">
+                Mostrando máximo 1000 registros. Usa filtros para acotar la búsqueda.
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Teléfono</th>
+                        <th>Plan</th>
+                        <th>Estado</th>
+                        <th>Centro de Costo</th>
+                        <th>Asignación</th>
+                        <th>Empleado</th>
+                        <th>Correo</th>
+                        <th>IMEI Equipo</th>
+                        <th>Modelo Equipo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in resultados %}
+                    <tr>
+                        <td>
+                            <span class="mono fw-bold">{{ r.telefono }}</span>
+                        </td>
+                        <td>{{ r.plan }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if r.estatus == 'Disponible' else 'primary' if r.estatus == 'Asignado' else 'warning' if r.estatus == 'Externo' else 'secondary' }}">
+                                {{ r.estatus }}
+                            </span>
+                        </td>
+                        <td>{{ r.centro_costo or '—' }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'info' if r.tipo_asignacion == 'Asignada' else 'warning' }}">
+                                {{ r.tipo_asignacion }}
+                            </span>
+                        </td>
+                        <td>{{ r.empleado_nombre or '—' }}</td>
+                        <td>
+                            <small>{{ r.correo or '—' }}</small>
+                        </td>
+                        <td>
+                            <span class="mono">{{ r.equipo_imei or '—' }}</span>
+                        </td>
+                        <td>{{ r.equipo_modelo or '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% elif request.args %}
+    <div class="empty-state">
+        <h5>Sin resultados</h5>
+        <p>No se encontraron líneas con los filtros aplicados. Intenta ajustar tus criterios de búsqueda.</p>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <h5>Comienza tu búsqueda</h5>
+        <p>Usa los filtros de arriba para buscar líneas y personal en el sistema.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Manage filter button states
+    function setFiltro(campo, valor) {
+        document.getElementById('inp_' + campo).value = valor;
+
+        // Define button groups and their mappings
+        const grupos = {
+            'asignada': [
+                { valor: 'todos', selector: 'Todas' },
+                { valor: 'si', selector: 'Asignada' },
+                { valor: 'no', selector: 'Sin asignar' }
+            ],
+            'con_equipo': [
+                { valor: 'todos', selector: 'Todos' },
+                { valor: 'con', selector: 'Con equipo' },
+                { valor: 'sin', selector: 'Sin equipo' }
+            ]
+        };
+
+        // Update all buttons in this group
+        if (grupos[campo]) {
+            document.querySelectorAll(`button[onclick*="setFiltro('${campo}'"]`).forEach(btn => {
+                const btnText = btn.textContent.trim();
+                const isActive = grupos[campo].some(g => g.valor === valor && btnText.includes(g.selector));
+                btn.classList.toggle('active', isActive);
+            });
+        }
+    }
+
+    // Load areas dynamically based on selected cost center
+    async function cargarAreas(ccId) {
+        const sel = document.getElementById('area_select');
+        sel.innerHTML = '<option value="">-- Todas --</option>';
+
+        if (!ccId) return;
+
+        try {
+            const resp = await fetch('/api/areas_por_cc?cc_id=' + encodeURIComponent(ccId));
+            const areas = await resp.json();
+            areas.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.id;
+                opt.textContent = a.nombre;
+                sel.appendChild(opt);
+            });
+        } catch(e) {
+            console.error('Error cargando áreas:', e);
+            Toast.error('Error al cargar áreas');
+        }
+    }
+</script>
+
+{% endblock %}

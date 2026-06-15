@@ -1,0 +1,124 @@
+/* Estilos para selectores dinámicos mejorados */
+
+.search-container {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.search-container label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.search-wrapper {
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.2);
+}
+
+.options-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 250px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    display: none;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.options-list.visible {
+    display: block;
+}
+
+.option-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.option-item:hover {
+    background-color: #f5f5f5;
+}
+
+.option-item.selected {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.option-item.highlighted {
+    background-color: #e8f5e9;
+}
+
+.option-label {
+    display: block;
+    font-weight: 500;
+}
+
+.option-id {
+    display: block;
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 0.2rem;
+}
+
+.option-item.selected .option-id {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.no-results {
+    padding: 1rem;
+    text-align: center;
+    color: #999;
+}
+
+.selected-value {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: #f0f0f0;
+    border-radius: 0.3rem;
+    font-size: 0.9rem;
+}
+
+.selected-value.active {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border-left: 3px solid #4CAF50;
+    padding-left: calc(0.5rem - 3px);
+}
+
+.selected-value button {
+    margin-left: 0.5rem;
+    background-color: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.3rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.selected-value button:hover {
+    background-color: #ff5252;
+}

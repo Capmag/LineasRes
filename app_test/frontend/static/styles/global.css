@@ -1,0 +1,610 @@
+/* ========================================
+   ESTILOS GLOBALES - SISTEMA COMPLETO
+   ======================================== */
+
+:root {
+    --color-primary: #0066cc;
+    --color-primary-dark: #0052a3;
+    --color-success: #28a745;
+    --color-danger: #dc3545;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-secondary: #6c757d;
+    --color-light: #f8f9fa;
+    --color-dark: #333;
+    --border-color: #ddd;
+    --text-color: #333;
+    --bg-color: #fff;
+    --shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: var(--text-color);
+    line-height: 1.5;
+}
+
+/* ========================================
+   CONTENEDORES
+   ======================================== */
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.form-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* ========================================
+   TÍTULOS Y ENCABEZADOS
+   ======================================== */
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-color);
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 30px;
+}
+
+h2 {
+    font-size: 1.75em;
+}
+
+h3 {
+    font-size: 1.5em;
+}
+
+.page-title {
+    font-size: 2em;
+    color: var(--text-color);
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.section-title {
+    font-size: 1.5em;
+    color: var(--text-color);
+    margin-bottom: 20px;
+}
+
+/* ========================================
+   FORMULARIOS
+   ======================================== */
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1em;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 5px rgba(0, 102, 204, 0.3);
+}
+
+input[readonly] {
+    background-color: var(--color-light);
+    color: #666;
+}
+
+.required {
+    color: var(--color-danger);
+}
+
+.info-text {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 5px;
+}
+
+.help-text {
+    display: block;
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* ========================================
+   BOTONES
+   ======================================== */
+
+button,
+.btn,
+input[type="button"],
+input[type="submit"] {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.btn-primary,
+.btn-crear {
+    background-color: var(--color-success);
+    color: white;
+}
+
+.btn-primary:hover,
+.btn-crear:hover {
+    background-color: #218838;
+}
+
+.btn-secondary {
+    background-color: var(--color-secondary);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-danger,
+.btn-eliminar {
+    background-color: var(--color-danger);
+    color: white;
+}
+
+.btn-danger:hover,
+.btn-eliminar:hover {
+    background-color: #c82333;
+}
+
+.btn-info,
+.btn-editar {
+    background-color: var(--color-info);
+    color: white;
+}
+
+.btn-info:hover,
+.btn-editar:hover {
+    background-color: #138496;
+}
+
+.btn-warning {
+    background-color: var(--color-warning);
+    color: #333;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.btn-large {
+    padding: 15px 30px;
+    font-size: 1.1em;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 0.9em;
+}
+
+.btn-block {
+    width: 100%;
+    display: block;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.btn-toggle {
+    flex: 1;
+    padding: 10px 15px;
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-toggle.activo {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.btn-toggle:hover {
+    border-color: var(--color-primary);
+}
+
+/* ========================================
+   TABLAS
+   ======================================== */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+}
+
+thead {
+    background-color: var(--color-light);
+    border-bottom: 2px solid var(--border-color);
+}
+
+th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+tbody tr:hover {
+    background-color: var(--color-light);
+}
+
+.table-striped tbody tr:nth-child(odd) {
+    background-color: var(--color-light);
+}
+
+/* ========================================
+   BADGES Y ETIQUETAS
+   ======================================== */
+
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-align: center;
+}
+
+.badge-success,
+.badge-activo,
+.estatus-activo,
+.estatus-disponible {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-danger,
+.badge-inactivo,
+.estatus-inactivo,
+.estatus-baja {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.badge-info,
+.estatus-asignado,
+.badge-tipo-vigente {
+    background-color: #cfe2ff;
+    color: #084298;
+}
+
+.badge-warning,
+.estatus-en-taller {
+    background-color: #fff3cd;
+    color: #664d03;
+}
+
+.badge-secondary,
+.estatus-externo {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.badge-no-asignar {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* ========================================
+   ALERTAS Y MENSAJES
+   ======================================== */
+
+.alert {
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left-color: #28a745;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left-color: #dc3545;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #664d03;
+    border-left-color: #ffc107;
+}
+
+.alert-info {
+    background-color: #cfe2ff;
+    color: #084298;
+    border-left-color: #0d6efd;
+}
+
+.sin-resultados,
+.instrucciones {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-size: 1.1em;
+}
+
+.advertencia {
+    color: var(--color-warning);
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+/* ========================================
+   HEADER Y NAVEGACIÓN
+   ======================================== */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header-title {
+    font-size: 2em;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ========================================
+   UTILITIES
+   ======================================== */
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.text-muted {
+    color: #666;
+}
+
+.text-danger {
+    color: var(--color-danger);
+}
+
+.text-success {
+    color: var(--color-success);
+}
+
+.text-info {
+    color: var(--color-info);
+}
+
+.text-warning {
+    color: var(--color-warning);
+}
+
+.mono {
+    font-family: 'Courier New', monospace;
+}
+
+.mt-1 { margin-top: 10px; }
+.mt-2 { margin-top: 20px; }
+.mt-3 { margin-top: 30px; }
+.mt-4 { margin-top: 40px; }
+
+.mb-1 { margin-bottom: 10px; }
+.mb-2 { margin-bottom: 20px; }
+.mb-3 { margin-bottom: 30px; }
+.mb-4 { margin-bottom: 40px; }
+
+.p-1 { padding: 10px; }
+.p-2 { padding: 20px; }
+.p-3 { padding: 30px; }
+.p-4 { padding: 40px; }
+
+.gap-1 { gap: 10px; }
+.gap-2 { gap: 20px; }
+
+.d-flex {
+    display: flex;
+}
+
+.d-grid {
+    display: grid;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+/* ========================================
+   GRID LAYOUT
+   ======================================== */
+
+.grid {
+    display: grid;
+    gap: 20px;
+}
+
+.grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.grid-3 {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.grid-4 {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .form-container {
+        margin: 20px 10px;
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    table {
+        font-size: 0.9em;
+    }
+
+    th, td {
+        padding: 10px;
+    }
+
+    .btn-group {
+        flex-direction: column;
+    }
+
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .container,
+    .page-container {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 1.3em;
+        margin-bottom: 15px;
+    }
+
+    button,
+    .btn,
+    input[type="button"],
+    input[type="submit"] {
+        padding: 8px 16px;
+        font-size: 0.95em;
+    }
+
+    .btn-block {
+        width: 100%;
+    }
+}
