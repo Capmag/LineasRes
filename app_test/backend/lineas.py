@@ -1,5 +1,6 @@
+import uuid
 from flask import Blueprint, request, render_template, jsonify
-from utils import fetch_all, fetch_one, execute_query, api_error
+from utils import fetch_all, fetch_one, execute_query, execute_transaction, api_error, leer_csv, campo
 
 lineas_bp = Blueprint('lineas', __name__)
 
@@ -111,6 +112,95 @@ def crear_lineas():
         """, (id_linea, cuenta_padre_id, lada, numero, plan, iccid))
 
         return jsonify({"ok": True, "msg": "Línea creada correctamente", "redirect": "/lineas"}), 201
+
+    except Exception as e:
+        return api_error(e)
+
+
+@lineas_bp.route("/lineas/importar", methods=["POST"])
+def importar_lineas():
+    """Importación masiva de líneas desde CSV.
+
+    Columnas esperadas: numero, cuenta_padre, iccid, plan
+    - 'numero': 10 dígitos.
+    - 'cuenta_padre': código de la cuenta padre (debe existir).
+    - 'iccid': opcional.
+    - 'plan': obligatorio.
+    El id se genera automáticamente (UUID). Validación todo-o-nada:
+    si hay algún error no se inserta nada.
+    """
+    try:
+        file = request.files.get("archivo")
+        if not file or not file.filename:
+            return jsonify({"ok": False, "msg": "No se recibió ningún archivo"}), 400
+        if not file.filename.lower().endswith(".csv"):
+            return jsonify({"ok": False, "msg": "El archivo debe ser .csv"}), 400
+
+        filas, err = leer_csv(file)
+        if err:
+            return jsonify({"ok": False, "msg": err}), 400
+        if not filas:
+            return jsonify({"ok": False, "msg": "El archivo no tiene filas de datos"}), 400
+
+        # Catálogos en memoria para validar sin N consultas
+        cuentas = {(r["codigo"] or "").strip(): r["id"]
+                   for r in fetch_all("SELECT id, codigo FROM cuentas_padre")}
+        numeros_db = {r["numero"] for r in fetch_all("SELECT numero FROM lineas")}
+        iccids_db = {r["iccid"] for r in fetch_all("SELECT iccid FROM lineas WHERE iccid IS NOT NULL")}
+
+        statements = []
+        errores = []
+        numeros_vistos = set()
+        iccids_vistos = set()
+
+        for i, row in enumerate(filas, start=2):  # fila 1 = encabezado
+            numero_raw = campo(row, "numero", "linea", "telefono")
+            cuenta_cod = campo(row, "cuenta_padre", "cuenta padre", "codigo", "cuenta")
+            iccid = campo(row, "iccid", "ssid", "sim") or None
+            plan = campo(row, "plan")
+
+            lada, numero, perr = _parse_telefono(numero_raw)
+            if perr:
+                errores.append(f"Fila {i}: {perr}")
+                continue
+            if not cuenta_cod:
+                errores.append(f"Fila {i}: falta la cuenta padre")
+                continue
+            if cuenta_cod not in cuentas:
+                errores.append(f"Fila {i}: la cuenta padre '{cuenta_cod}' no existe")
+                continue
+            if not plan:
+                errores.append(f"Fila {i}: el plan es obligatorio")
+                continue
+            if iccid and len(iccid) > 20:
+                errores.append(f"Fila {i}: el ICCID es demasiado largo (máx 20 caracteres)")
+                continue
+            if numero in numeros_db or numero in numeros_vistos:
+                errores.append(f"Fila {i}: el número {numero} ya existe o está duplicado en el archivo")
+                continue
+            if iccid and (iccid in iccids_db or iccid in iccids_vistos):
+                errores.append(f"Fila {i}: el ICCID {iccid} ya existe o está duplicado en el archivo")
+                continue
+
+            numeros_vistos.add(numero)
+            if iccid:
+                iccids_vistos.add(iccid)
+
+            statements.append((
+                """INSERT INTO lineas (id, cuenta_padre_id, lada, numero, plan, iccid, estatus)
+                   VALUES (%s, %s, %s, %s, %s, %s, 'Disponible')""",
+                (str(uuid.uuid4()), cuentas[cuenta_cod], lada, numero, plan, iccid)
+            ))
+
+        if errores:
+            return jsonify({
+                "ok": False,
+                "msg": f"No se importó nada. Se encontraron {len(errores)} error(es); corrige el archivo.",
+                "errores": errores[:50]
+            }), 400
+
+        execute_transaction(statements)
+        return jsonify({"ok": True, "msg": f"Se importaron {len(statements)} línea(s) correctamente."})
 
     except Exception as e:
         return api_error(e)

@@ -1,4 +1,6 @@
 import os
+import csv
+import io
 import threading
 import mysql.connector
 from mysql.connector.pooling import MySQLConnectionPool
@@ -179,3 +181,60 @@ def require_fields(data, fields):
         if not clean(data.get(field)):
             return message
     return None
+
+
+# =========================================================
+# IMPORTACIÓN CSV
+# =========================================================
+
+def leer_csv(file):
+    """Lee un archivo CSV subido (FileStorage) y devuelve (filas, error).
+
+    - Detecta la codificación (UTF-8 con/sin BOM o Latin-1).
+    - Detecta el delimitador (',' ';' o tab) para soportar exports de Excel.
+    - Normaliza los encabezados a minúsculas sin espacios al borde.
+    - Ignora filas completamente vacías.
+    """
+    raw = file.read()
+    if not raw:
+        return None, "El archivo está vacío"
+
+    text = None
+    for enc in ("utf-8-sig", "latin-1"):
+        try:
+            text = raw.decode(enc)
+            break
+        except UnicodeDecodeError:
+            continue
+    if text is None:
+        return None, "No se pudo leer el archivo (codificación no soportada)"
+
+    try:
+        delimiter = csv.Sniffer().sniff(text[:2048], delimiters=",;\t").delimiter
+    except csv.Error:
+        delimiter = ","
+
+    reader = csv.DictReader(io.StringIO(text), delimiter=delimiter)
+    if not reader.fieldnames:
+        return None, "El archivo no tiene encabezados"
+
+    filas = []
+    for row in reader:
+        norm = {}
+        for k, v in row.items():
+            if k is None:
+                continue
+            norm[k.strip().lower()] = (v or "").strip()
+        if any(norm.values()):  # ignora filas vacías
+            filas.append(norm)
+
+    return filas, None
+
+
+def campo(row, *aliases):
+    """Devuelve el primer valor no vacío de `row` para cualquiera de los alias dados."""
+    for a in aliases:
+        v = row.get(a.strip().lower())
+        if v:
+            return v
+    return ""

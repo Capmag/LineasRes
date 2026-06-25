@@ -27,6 +27,9 @@
             <h1>Líneas</h1>
         </div>
         <div class="col-auto">
+            <button class="btn btn-outline-primary btn-lg me-2" onclick="abrirModalImportar()">
+                <i class="bi bi-upload"></i> Importar CSV
+            </button>
             <button class="btn btn-success btn-lg" onclick="abrirModalCrear()">
                 + Nueva Línea
             </button>
@@ -207,6 +210,36 @@
     </div>
 </div>
 
+<!-- Modal de Importar CSV -->
+<div class="modal fade" id="importLineaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Importar Líneas (CSV)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-2">
+                    El archivo debe tener las columnas: <code>numero, cuenta_padre, iccid, plan</code>.
+                    La <strong>cuenta_padre</strong> es el <strong>código</strong> de la cuenta padre.
+                    El <strong>iccid</strong> es opcional. Si una fila tiene errores, no se importa nada.
+                </p>
+                <button type="button" class="btn btn-sm btn-link px-0 mb-3" onclick="descargarPlantillaLineas()">
+                    <i class="bi bi-download"></i> Descargar plantilla de ejemplo
+                </button>
+                <div class="mb-2">
+                    <input type="file" class="form-control" id="csv_lineas" accept=".csv">
+                </div>
+                <div id="importLineasErrores"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnImportarLineas" onclick="importarLineas()">Importar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     let lineaIdActual = null;
 
@@ -369,6 +402,78 @@
             }
         } catch (e) {
             Toast.error('Error de conexión: ' + e.message);
+        }
+    }
+
+    // ===== Importación CSV =====
+    function abrirModalImportar() {
+        document.getElementById('csv_lineas').value = '';
+        document.getElementById('importLineasErrores').innerHTML = '';
+        new bootstrap.Modal(document.getElementById('importLineaModal')).show();
+    }
+
+    function descargarPlantillaLineas() {
+        const csv = '﻿numero,cuenta_padre,iccid,plan\n5512345678,CP001,8952140061234567890,Plan 5GB\n';
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'plantilla_lineas.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function mostrarErroresImport(contId, errores) {
+        const cont = document.getElementById(contId);
+        cont.innerHTML = '';
+        const wrap = document.createElement('div');
+        wrap.className = 'alert alert-danger mt-2 mb-0';
+        const strong = document.createElement('strong');
+        strong.textContent = 'Errores encontrados:';
+        wrap.appendChild(strong);
+        const ul = document.createElement('ul');
+        ul.className = 'mb-0';
+        errores.forEach(e => {
+            const li = document.createElement('li');
+            li.textContent = e;
+            ul.appendChild(li);
+        });
+        wrap.appendChild(ul);
+        cont.appendChild(wrap);
+    }
+
+    async function importarLineas() {
+        const input = document.getElementById('csv_lineas');
+        if (!input.files.length) {
+            Toast.error('Selecciona un archivo CSV');
+            return;
+        }
+        const btn = document.getElementById('btnImportarLineas');
+        btn.disabled = true;
+        document.getElementById('importLineasErrores').innerHTML = '';
+
+        const fd = new FormData();
+        fd.append('archivo', input.files[0]);
+
+        try {
+            const resp = await fetch('/lineas/importar', { method: 'POST', body: fd });
+            const data = await resp.json();
+            if (data.ok) {
+                Toast.success(data.msg);
+                bootstrap.Modal.getInstance(document.getElementById('importLineaModal')).hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                Toast.error(data.msg || 'Error al importar');
+                if (data.errores && data.errores.length) {
+                    mostrarErroresImport('importLineasErrores', data.errores);
+                }
+            }
+        } catch (e) {
+            Toast.error('Error de conexión: ' + e.message);
+        } finally {
+            btn.disabled = false;
         }
     }
 </script>

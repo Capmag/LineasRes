@@ -1,5 +1,5 @@
 from flask import Blueprint, request, render_template, jsonify
-from utils import fetch_all, fetch_one, execute_query, api_error
+from utils import fetch_all, fetch_one, execute_query, execute_transaction, api_error, leer_csv, campo
 
 moviles_bp = Blueprint('moviles', __name__)
 
@@ -88,6 +88,71 @@ def crear_moviles():
         """, (imei, marca, modelo, serial))
 
         return jsonify({"ok": True, "msg": "Equipo creado correctamente", "redirect": "/moviles"}), 201
+
+    except Exception as e:
+        return api_error(e)
+
+
+@moviles_bp.route("/moviles/importar", methods=["POST"])
+def importar_moviles():
+    """Importación masiva de equipos desde CSV.
+
+    Columnas esperadas: imei, marca, modelo, serial
+    - 'imei': 15 dígitos, obligatorio y único.
+    - 'marca', 'modelo', 'serial': opcionales.
+    Validación todo-o-nada: si hay algún error no se inserta nada.
+    """
+    try:
+        file = request.files.get("archivo")
+        if not file or not file.filename:
+            return jsonify({"ok": False, "msg": "No se recibió ningún archivo"}), 400
+        if not file.filename.lower().endswith(".csv"):
+            return jsonify({"ok": False, "msg": "El archivo debe ser .csv"}), 400
+
+        filas, err = leer_csv(file)
+        if err:
+            return jsonify({"ok": False, "msg": err}), 400
+        if not filas:
+            return jsonify({"ok": False, "msg": "El archivo no tiene filas de datos"}), 400
+
+        imeis_db = {r["imei"] for r in fetch_all("SELECT imei FROM equipos")}
+
+        statements = []
+        errores = []
+        imeis_vistos = set()
+
+        for i, row in enumerate(filas, start=2):  # fila 1 = encabezado
+            imei = campo(row, "imei")
+            marca = campo(row, "marca") or None
+            modelo = campo(row, "modelo") or None
+            serial = campo(row, "serial", "numero de serie", "numero_serie", "serie", "no_serie") or None
+
+            if not imei:
+                errores.append(f"Fila {i}: falta el IMEI")
+                continue
+            if not imei.isdigit() or len(imei) != 15:
+                errores.append(f"Fila {i}: el IMEI '{imei}' debe tener exactamente 15 dígitos numéricos")
+                continue
+            if imei in imeis_db or imei in imeis_vistos:
+                errores.append(f"Fila {i}: el IMEI {imei} ya existe o está duplicado en el archivo")
+                continue
+
+            imeis_vistos.add(imei)
+            statements.append((
+                """INSERT INTO equipos (imei, marca, modelo, serial, estatus)
+                   VALUES (%s, %s, %s, %s, 'Disponible')""",
+                (imei, marca, modelo, serial)
+            ))
+
+        if errores:
+            return jsonify({
+                "ok": False,
+                "msg": f"No se importó nada. Se encontraron {len(errores)} error(es); corrige el archivo.",
+                "errores": errores[:50]
+            }), 400
+
+        execute_transaction(statements)
+        return jsonify({"ok": True, "msg": f"Se importaron {len(statements)} equipo(s) correctamente."})
 
     except Exception as e:
         return api_error(e)
